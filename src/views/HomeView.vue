@@ -69,7 +69,7 @@ const funTiles = computed(() => {
     },
     s.worst_player && {
       variant: 'paper' as const,
-      emoji: '🥄',
+      emoji: '💩',
       label: 'Le Valère Germain du baby',
       value: s.worst_player.name,
       detail: `${percent(s.worst_player.stats.win_rate)} de victoires… courage !`,
