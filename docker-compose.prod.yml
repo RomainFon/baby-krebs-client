@@ -23,7 +23,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_network"
       - "traefik.http.services.baby-krebs-client.loadbalancer.server.port=80"
-      - "traefik.http.routers.baby-krebs-client.rule=Host(`${BABY_KREBS_DOMAIN}`)"
+      - "traefik.http.routers.baby-krebs-client.rule=Host(`${BABY_KREBS_DOMAIN:-baby-krebs.fontaine-romain.fr}`)"
       - "traefik.http.routers.baby-krebs-client.entrypoints=websecure"
       - "traefik.http.routers.baby-krebs-client.tls=true"
       - "traefik.http.routers.baby-krebs-client.tls.certresolver=letsencrypt"
