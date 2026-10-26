@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -10,6 +11,21 @@ const email = ref('')
 const password = ref('')
 const error = ref<string | null>(null)
 const isSubmitting = ref(false)
+
+// Retours d'échec du callback SSO Microsoft (MicrosoftAuthController côté API).
+const SSO_ERRORS: Record<string, string> = {
+  unauthorized:
+    "Ce compte Microsoft n'est pas autorisé : seuls les organisateurs ont accès à l'admin.",
+  microsoft: 'La connexion avec Microsoft a échoué. Réessaie.',
+}
+
+onMounted(() => {
+  const code = route.query.error
+  if (typeof code === 'string' && code in SSO_ERRORS) {
+    error.value = SSO_ERRORS[code]!
+    router.replace({ query: {} })
+  }
+})
 
 async function handleSubmit() {
   error.value = null
@@ -34,6 +50,27 @@ async function handleSubmit() {
     </div>
 
     <form class="card flex w-full max-w-sm flex-col gap-4 p-6" @submit.prevent="handleSubmit">
+      <!-- Vraie navigation (pas un appel Axios) : le flux OAuth quitte le SPA
+           pour passer par Microsoft. -->
+      <a
+        href="/api/auth/microsoft/redirect"
+        class="btn w-full bg-paper py-3 text-ink hover:bg-white"
+      >
+        <svg viewBox="0 0 21 21" class="h-4 w-4" aria-hidden="true">
+          <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+          <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+          <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+          <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+        </svg>
+        Se connecter avec Microsoft
+      </a>
+
+      <div class="flex items-center gap-3 text-xs text-muted">
+        <div class="h-px flex-1 bg-line" />
+        ou avec un mot de passe
+        <div class="h-px flex-1 bg-line" />
+      </div>
+
       <label class="block text-sm">
         <span class="mb-1 block text-muted">Email</span>
         <input v-model="email" type="email" required autocomplete="username" class="field" />
