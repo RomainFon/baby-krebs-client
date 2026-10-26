@@ -70,7 +70,7 @@ const funTiles = computed(() => {
     s.worst_player && {
       variant: 'paper' as const,
       emoji: '🥄',
-      label: 'Cuillère de bois',
+      label: 'Le Valère Germain du baby',
       value: s.worst_player.name,
       detail: `${percent(s.worst_player.stats.win_rate)} de victoires… courage !`,
       to: playerLink(s.worst_player),
@@ -149,10 +149,6 @@ const funTiles = computed(() => {
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatTile v-for="tile in funTiles" :key="tile.label" v-bind="tile" />
         </div>
-        <p v-if="stats" class="text-xs text-muted">
-          Meilleur joueur et cuillère de bois : au moins
-          {{ plural(stats.min_games_for_ranking, 'match', 'matchs') }} joués.
-        </p>
       </section>
     </template>
 
