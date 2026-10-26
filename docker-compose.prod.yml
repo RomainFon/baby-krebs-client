@@ -1,0 +1,39 @@
+# =============================================================================
+# docker-compose.prod.yml
+# Usage : docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Sert le SPA buildé via nginx, derrière le Traefik du projet `infra`. Même
+# domaine que baby-krebs-api : celle-ci prend /api et /sanctum (priorité
+# 100), ce service est le catch-all (priorité 1).
+# =============================================================================
+
+services:
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Chemins relatifs (même origine que l'API, routée par Traefik).
+        VITE_API_URL: ""
+    restart: unless-stopped
+    networks:
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_network"
+      - "traefik.http.services.baby-krebs-client.loadbalancer.server.port=80"
+      - "traefik.http.routers.baby-krebs-client.rule=Host(`${BABY_KREBS_DOMAIN}`)"
+      - "traefik.http.routers.baby-krebs-client.entrypoints=websecure"
+      - "traefik.http.routers.baby-krebs-client.tls=true"
+      - "traefik.http.routers.baby-krebs-client.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.baby-krebs-client.priority=1"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 128M
+
+networks:
+  traefik_network:
+    external: true
