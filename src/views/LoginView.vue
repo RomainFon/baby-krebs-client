@@ -27,12 +27,10 @@ async function handleSubmit() {
 
 <template>
   <div class="flex min-h-screen flex-col items-center justify-center px-4">
-    <div class="mb-8 text-center">
-      <img src="/favicon.svg" alt="" class="mx-auto mb-3 h-12 w-12" />
-      <h1 class="font-display text-4xl font-extrabold">
-        Baby <span class="text-final">Krebs</span>
-      </h1>
-      <p class="mt-2 text-sm text-muted">Espace organisateur</p>
+    <div class="mb-8 w-full max-w-sm">
+      <img src="/favicon.svg" alt="" class="mb-6 h-14 w-14" />
+      <p class="kicker">Espace organisateur</p>
+      <h1 class="display text-7xl">Connexion</h1>
     </div>
 
     <form class="card flex w-full max-w-sm flex-col gap-4 p-6" @submit.prevent="handleSubmit">
@@ -51,13 +49,13 @@ async function handleSubmit() {
         />
       </label>
       <p v-if="error" class="text-sm text-danger">{{ error }}</p>
-      <button type="submit" :disabled="isSubmitting" class="btn-primary w-full py-2.5">
+      <button type="submit" :disabled="isSubmitting" class="btn-primary w-full py-3">
         {{ isSubmitting ? 'Connexion…' : 'Se connecter' }}
       </button>
     </form>
 
-    <RouterLink :to="{ name: 'home' }" class="mt-6 text-xs text-muted hover:text-text"
-      >← Retour au tournoi</RouterLink
-    >
+    <RouterLink :to="{ name: 'home' }" class="mt-6 text-sm text-muted hover:text-text">
+      ← Retour à l'accueil
+    </RouterLink>
   </div>
 </template>

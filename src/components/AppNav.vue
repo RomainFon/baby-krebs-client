@@ -2,20 +2,39 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-const tabs = computed(() => {
+type Tab = {
+  label: string
+  icon: 'home' | 'trophy' | 'users' | 'settings'
+  to: { name: string }
+  active: boolean
+}
+
+const tabs = computed<Tab[]>(() => {
   const name = String(route.name ?? '')
-  const items = [
-    { label: 'Accueil', to: { name: 'home' }, active: name === 'home' },
-    { label: 'Tournois', to: { name: 'tournaments' }, active: route.path.startsWith('/tournois') },
-    { label: 'Joueurs', to: { name: 'players' }, active: name.startsWith('player') },
+  const items: Tab[] = [
+    { label: 'Accueil', icon: 'home', to: { name: 'home' }, active: name === 'home' },
+    {
+      label: 'Tournois',
+      icon: 'trophy',
+      to: { name: 'tournaments' },
+      active: route.path.startsWith('/tournois'),
+    },
+    { label: 'Joueurs', icon: 'users', to: { name: 'players' }, active: name.startsWith('player') },
   ]
-  if (auth.user)
-    items.push({ label: 'Admin', to: { name: 'admin' }, active: name.startsWith('admin') })
+  if (auth.user) {
+    items.push({
+      label: 'Admin',
+      icon: 'settings',
+      to: { name: 'admin' },
+      active: name.startsWith('admin'),
+    })
+  }
   return items
 })
 
@@ -26,27 +45,21 @@ async function handleLogout() {
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 border-b border-line bg-background/90 backdrop-blur">
-    <div class="mx-auto flex max-w-6xl items-end gap-3 px-4 pt-3 sm:gap-8">
-      <RouterLink
-        :to="{ name: 'home' }"
-        class="flex shrink-0 items-center gap-2 pb-3 font-display text-lg font-extrabold"
-      >
-        <img src="/favicon.svg" alt="" class="h-7 w-7" />
-        <span class="hidden sm:inline">Baby <span class="text-final">Krebs</span></span>
+  <header class="sticky top-0 z-30 bg-background/85 backdrop-blur-md">
+    <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:gap-8">
+      <RouterLink :to="{ name: 'home' }" class="flex shrink-0 items-center gap-2.5">
+        <img src="/favicon.svg" alt="" class="h-10 w-10" />
+        <span class="font-display text-xl tracking-wide uppercase">Baby Krebs</span>
       </RouterLink>
 
-      <nav class="-mx-2 flex flex-1 items-end gap-0.5 overflow-x-auto text-sm sm:mx-0 sm:gap-1">
+      <!-- Desktop : onglets en pilules dans l'en-tête. -->
+      <nav class="hidden flex-1 items-center gap-2 md:flex">
         <RouterLink
           v-for="tab in tabs"
           :key="tab.label"
           :to="tab.to"
-          class="shrink-0 border-b-2 px-1.5 pb-3 sm:px-2"
-          :class="
-            tab.active
-              ? 'border-primary font-semibold text-text'
-              : 'border-transparent text-muted hover:text-text'
-          "
+          class="pill"
+          :class="tab.active && 'pill-active'"
         >
           {{ tab.label }}
         </RouterLink>
@@ -55,18 +68,35 @@ async function handleLogout() {
       <button
         v-if="auth.user"
         type="button"
-        class="shrink-0 cursor-pointer pb-3 text-xs text-muted hover:text-text"
+        class="ml-auto flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface-alt text-muted hover:text-text md:ml-0"
+        title="Se déconnecter"
+        aria-label="Se déconnecter"
         @click="handleLogout"
       >
-        Déconnexion
+        <AppIcon name="logout" class="h-5 w-5" />
       </button>
-      <RouterLink
-        v-else
-        :to="{ name: 'login' }"
-        class="mb-2.5 shrink-0 rounded-md border border-line px-2.5 py-1 sm:px-3 text-xs text-muted hover:border-muted hover:text-text"
-      >
-        <span class="sm:hidden">Connexion</span><span class="hidden sm:inline">Se connecter</span>
+      <RouterLink v-else :to="{ name: 'login' }" class="btn-ghost ml-auto md:ml-0">
+        <AppIcon name="login" class="h-4 w-4" />
+        Se connecter
       </RouterLink>
     </div>
   </header>
+
+  <!-- Mobile : barre d'onglets flottante en bas, comme la maquette. -->
+  <nav
+    class="fixed inset-x-0 bottom-4 z-30 mx-auto flex w-fit items-center gap-1.5 rounded-full bg-surface/95 p-1.5 shadow-2xl shadow-black/60 ring-1 ring-line backdrop-blur-md md:hidden"
+    style="margin-bottom: env(safe-area-inset-bottom)"
+  >
+    <RouterLink
+      v-for="tab in tabs"
+      :key="tab.label"
+      :to="tab.to"
+      :aria-label="tab.label"
+      class="flex h-12 items-center justify-center gap-2 rounded-full transition-all"
+      :class="tab.active ? 'bg-primary px-5 text-primary-text' : 'w-12 bg-surface-alt text-muted'"
+    >
+      <AppIcon :name="tab.icon" class="h-5 w-5" />
+      <span v-if="tab.active" class="text-sm font-semibold">{{ tab.label }}</span>
+    </RouterLink>
+  </nav>
 </template>

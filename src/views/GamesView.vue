@@ -65,12 +65,8 @@ function time(game: Game): string {
         v-for="f in FILTERS"
         :key="f.key"
         type="button"
-        class="cursor-pointer rounded-full border px-3 py-1 text-xs"
-        :class="
-          filter === f.key
-            ? 'border-primary bg-primary/10 text-text'
-            : 'border-line text-muted hover:text-text'
-        "
+        class="pill"
+        :class="filter === f.key && 'pill-active'"
         @click="filter = f.key"
       >
         {{ f.label }}
@@ -114,7 +110,7 @@ function time(game: Game): string {
             >
               {{ slotLabel(tournament, game, 'a') }}
             </span>
-            <span class="font-display font-extrabold tabular-nums">
+            <span class="font-display tabular-nums">
               <template v-if="isPlayed(game)">{{ game.score_a }} – {{ game.score_b }}</template>
               <span v-else class="text-sm font-normal text-muted">vs</span>
             </span>

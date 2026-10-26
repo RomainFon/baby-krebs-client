@@ -30,14 +30,14 @@ const teams = computed(() =>
       >
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
-            <h2 class="truncate font-display text-lg font-extrabold">{{ team.name }}</h2>
+            <h2 class="display truncate text-3xl">{{ team.name }}</h2>
             <p class="truncate text-sm text-muted">
               {{ team.players.map((p) => p.name).join(' & ') }}
             </p>
           </div>
           <span
             v-if="pool"
-            class="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-muted"
+            class="shrink-0 rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-muted"
           >
             Poule {{ pool }}
           </span>

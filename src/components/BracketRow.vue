@@ -40,8 +40,8 @@ const columns = computed(() => {
     <div class="flex min-w-max gap-6">
       <div v-for="col in columns" :key="col.key" class="flex w-52 flex-col">
         <h4
-          class="mb-3 text-xs font-semibold tracking-wide uppercase"
-          :class="col.final ? 'text-final' : 'text-muted'"
+          class="mb-3 w-fit rounded-full px-3 py-1 text-xs font-semibold"
+          :class="col.final ? 'bg-primary text-primary-text' : 'bg-surface-alt text-muted'"
         >
           {{ col.label }}
         </h4>

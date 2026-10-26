@@ -33,25 +33,25 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
   <Teleport to="body">
     <div
       v-if="open"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      class="fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-3 pb-3 backdrop-blur-sm sm:items-center sm:px-4 sm:pb-0"
       @click.self="emit('close')"
     >
       <div
-        class="relative w-full max-w-md rounded-lg border border-[var(--color-line)] p-5 shadow-xl"
+        class="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-2xl ring-1 ring-line"
         :class="{ 'bg-[var(--color-surface)]': !accentColor }"
         :style="panelStyle"
       >
         <button
           type="button"
-          class="absolute top-4 right-4 cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          class="absolute top-4 right-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-surface-alt text-muted hover:text-text"
           aria-label="Fermer"
           @click="emit('close')"
         >
           ✕
         </button>
-        <div v-if="title" class="mb-4 pr-6">
-          <h3 class="text-lg font-semibold">{{ title }}</h3>
-          <p v-if="subtitle" class="mt-0.5 text-sm text-[var(--color-text-muted)]">
+        <div v-if="title" class="mb-5 pr-10">
+          <h3 class="font-display text-2xl tracking-wide uppercase">{{ title }}</h3>
+          <p v-if="subtitle" class="mt-0.5 text-sm text-[var(--color-muted)]">
             {{ subtitle }}
           </p>
         </div>

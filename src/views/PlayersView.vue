@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { fetchPlayers } from '@/api/tournaments'
 import type { PlayerStats, PlayerWithStats } from '@/types'
 import { percent, signed } from '@/lib/format'
+import PageTitle from '@/components/ui/PageTitle.vue'
 
 const players = ref<PlayerWithStats[]>([])
 const isLoading = ref(true)
@@ -62,7 +63,7 @@ const rows = computed(() => {
 <template>
   <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
     <div class="flex flex-wrap items-end justify-between gap-3">
-      <h1 class="font-display text-2xl font-extrabold sm:text-3xl">Joueurs</h1>
+      <PageTitle kicker="Explorer les" title="Joueurs" />
       <input
         v-model="search"
         type="search"

@@ -7,6 +7,9 @@ import { percent, plural } from '@/lib/format'
 import type { GlobalStats, PlayerWithStats } from '@/types'
 import StatTile from '@/components/StatTile.vue'
 import TournamentCard from '@/components/TournamentCard.vue'
+import MatchupCard from '@/components/MatchupCard.vue'
+import GameModal from '@/components/GameModal.vue'
+import PageTitle from '@/components/ui/PageTitle.vue'
 
 const store = useTournamentStore()
 const stats = ref<GlobalStats | null>(null)
@@ -16,6 +19,8 @@ onMounted(async () => {
   try {
     const [, s] = await Promise.all([store.loadList(), fetchStats()])
     stats.value = s
+    const first = live.value[0]
+    if (first && store.current?.id !== first.id) await store.load(first.id)
   } finally {
     isLoading.value = false
   }
@@ -23,6 +28,26 @@ onMounted(async () => {
 
 const live = computed(() =>
   store.list.filter((t) => t.status === 'groups' || t.status === 'bracket'),
+)
+
+// Détail du premier tournoi en cours, pour afficher son prochain match.
+const liveDetail = computed(() => (store.current?.id === live.value[0]?.id ? store.current : null))
+const nextGame = computed(() => {
+  const t = liveDetail.value
+  if (!t) return null
+  return (
+    t.games
+      .filter((g) => g.score_a === null && g.team_a_id !== null && g.team_b_id !== null)
+      .sort((a, b) => {
+        const da = a.scheduled_at ? Date.parse(a.scheduled_at) : Infinity
+        const db = b.scheduled_at ? Date.parse(b.scheduled_at) : Infinity
+        return da - db || a.number - b.number
+      })[0] ?? null
+  )
+})
+const openedGameId = ref<number | null>(null)
+const openedGame = computed(
+  () => liveDetail.value?.games.find((g) => g.id === openedGameId.value) ?? null,
 )
 
 function playerLink(p: PlayerWithStats) {
@@ -35,6 +60,7 @@ const funTiles = computed(() => {
   if (!s || s.games_played === 0) return []
   const tiles = [
     s.best_player && {
+      variant: 'lime' as const,
       emoji: '👑',
       label: 'Meilleur joueur',
       value: s.best_player.name,
@@ -42,6 +68,7 @@ const funTiles = computed(() => {
       to: playerLink(s.best_player),
     },
     s.worst_player && {
+      variant: 'paper' as const,
       emoji: '🥄',
       label: 'Cuillère de bois',
       value: s.worst_player.name,
@@ -82,39 +109,42 @@ const funTiles = computed(() => {
 </script>
 
 <template>
-  <main class="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8">
-    <section class="flex flex-col gap-2">
-      <h1 class="font-display text-3xl font-extrabold sm:text-4xl">
-        Baby <span class="text-final">Krebs</span>
-      </h1>
-      <p class="text-muted">Les tournois de baby-foot, les scores, et surtout les moqueries.</p>
-    </section>
+  <main class="mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-6 sm:py-10">
+    <PageTitle kicker="Bienvenue sur" title="Baby Krebs" />
 
     <p v-if="isLoading" class="text-sm text-muted">Chargement…</p>
 
     <template v-else>
-      <section class="flex flex-col gap-3">
-        <h2
-          class="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted uppercase"
+      <section class="flex flex-col gap-4">
+        <h2 class="section-title">Tournoi en cours</h2>
+        <div v-if="live.length" class="grid gap-4 lg:grid-cols-2">
+          <TournamentCard v-for="t in live" :key="t.id" :tournament="t" featured />
+          <div v-if="liveDetail && nextGame" class="flex flex-col gap-2">
+            <p class="px-1 text-sm text-muted">Prochain match</p>
+            <MatchupCard
+              :tournament="liveDetail"
+              :game="nextGame"
+              @open="openedGameId = $event.id"
+            />
+          </div>
+        </div>
+        <div
+          v-else
+          class="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-surface p-6"
         >
-          <span v-if="live.length" class="h-2 w-2 animate-pulse rounded-full bg-loser" /> Tournoi en
-          cours
-        </h2>
-        <TournamentCard v-for="t in live" :key="t.id" :tournament="t" featured />
-        <p v-if="live.length === 0" class="card p-5 text-sm text-muted">
-          Pas de tournoi en cours pour le moment.
-          <RouterLink :to="{ name: 'tournaments' }" class="text-primary hover:underline"
-            >Voir tous les tournois →</RouterLink
+          <p class="text-muted">Pas de tournoi en cours pour le moment.</p>
+          <RouterLink :to="{ name: 'tournaments' }" class="btn-primary"
+            >Voir tous les tournois</RouterLink
           >
-        </p>
+        </div>
       </section>
 
       <section v-if="funTiles.length" class="flex flex-col gap-4">
         <div class="flex items-baseline justify-between gap-3">
-          <h2 class="font-display text-xl font-extrabold">Le coin des stats</h2>
-          <RouterLink :to="{ name: 'players' }" class="text-sm text-muted hover:text-text"
-            >Tous les joueurs →</RouterLink
-          >
+          <h2 class="section-title">Le coin des stats</h2>
+          <RouterLink :to="{ name: 'players' }" class="text-sm text-muted hover:text-text">
+            Tous les joueurs →
+          </RouterLink>
         </div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <StatTile v-for="tile in funTiles" :key="tile.label" v-bind="tile" />
@@ -125,5 +155,12 @@ const funTiles = computed(() => {
         </p>
       </section>
     </template>
+
+    <GameModal
+      v-if="liveDetail"
+      :tournament="liveDetail"
+      :game="openedGame"
+      @close="openedGameId = null"
+    />
   </main>
 </template>

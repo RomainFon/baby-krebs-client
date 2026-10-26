@@ -46,7 +46,7 @@ const qualifSummary = computed(() => {
 
 <template>
   <div class="flex flex-col gap-8">
-    <div v-if="!hasDraw" class="card p-6 text-center">
+    <div v-if="!hasDraw" class="card p-8 text-center">
       <p class="font-semibold">Le tirage au sort n'a pas encore eu lieu.</p>
       <p class="mt-1 text-sm text-muted">
         {{ tournament.teams.length }} équipes inscrites pour l'instant.
@@ -55,35 +55,37 @@ const qualifSummary = computed(() => {
 
     <template v-else>
       <section v-if="upcoming.length" class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">À suivre</h2>
-        <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <h2 class="section-title">À suivre</h2>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <button
-            v-for="game in upcoming"
+            v-for="(game, i) in upcoming"
             :key="game.id"
             type="button"
-            class="card cursor-pointer px-3 py-2 text-left text-sm hover:bg-surface-alt"
+            class="flex cursor-pointer flex-col gap-2 rounded-3xl px-5 py-4 text-left transition-transform hover:-translate-y-0.5"
+            :class="i === 0 ? 'bg-primary text-primary-text' : 'bg-surface'"
             @click="open(game)"
           >
-            <p class="text-[11px] text-muted">
+            <p class="text-xs" :class="i === 0 ? 'opacity-70' : 'text-muted'">
               M{{ game.number }} · {{ formatDate(game.scheduled_at) }}
             </p>
-            <p class="truncate font-medium">
-              {{ slotLabel(tournament, game, 'a') }} <span class="text-muted">vs</span>
+            <p class="font-display text-xl leading-tight uppercase">
+              {{ slotLabel(tournament, game, 'a') }}
+              <span :class="i === 0 ? 'opacity-50' : 'text-muted'">vs</span>
               {{ slotLabel(tournament, game, 'b') }}
             </p>
           </button>
         </div>
       </section>
 
-      <div class="flex flex-wrap gap-1.5" role="group" aria-label="Suivre une équipe">
+      <div
+        class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+        role="group"
+        aria-label="Suivre une équipe"
+      >
         <button
           type="button"
-          class="cursor-pointer rounded-full border px-3 py-1 text-xs"
-          :class="
-            highlightTeamId === null
-              ? 'border-primary bg-primary/10 text-text'
-              : 'border-line text-muted hover:text-text'
-          "
+          class="pill"
+          :class="highlightTeamId === null && 'pill-active'"
           @click="highlightTeamId = null"
         >
           Toutes
@@ -92,12 +94,8 @@ const qualifSummary = computed(() => {
           v-for="team in tournament.teams"
           :key="team.id"
           type="button"
-          class="cursor-pointer rounded-full border px-3 py-1 text-xs"
-          :class="
-            highlightTeamId === team.id
-              ? 'border-primary bg-primary/10 text-text'
-              : 'border-line text-muted hover:text-text'
-          "
+          class="pill"
+          :class="highlightTeamId === team.id && 'pill-active'"
           @click="highlightTeamId = highlightTeamId === team.id ? null : team.id"
         >
           {{ team.name }}
@@ -105,7 +103,7 @@ const qualifSummary = computed(() => {
       </div>
 
       <section class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">Poules</h2>
+        <h2 class="section-title">Poules</h2>
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <PoolTable
             v-for="pool in tournament.pools"
@@ -128,7 +126,7 @@ const qualifSummary = computed(() => {
       </section>
 
       <section class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold tracking-wide text-winner uppercase">Winner bracket</h2>
+        <h2 class="section-title text-winner">Winner bracket</h2>
         <BracketRow
           :tournament="tournament"
           stage="winner"
@@ -139,7 +137,7 @@ const qualifSummary = computed(() => {
       </section>
 
       <section v-if="hasLoserBracket" class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold tracking-wide text-loser uppercase">Loser bracket</h2>
+        <h2 class="section-title text-loser">Loser bracket</h2>
         <BracketRow
           :tournament="tournament"
           stage="loser"

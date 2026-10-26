@@ -96,7 +96,7 @@ function setWinner(slot: 'a' | 'b') {
           <button
             v-if="teamsKnown"
             type="button"
-            class="cursor-pointer rounded border border-line px-1 text-[10px] text-muted hover:text-text"
+            class="cursor-pointer rounded-full bg-surface-alt px-2 py-0.5 text-[10px] font-bold text-muted hover:bg-primary hover:text-primary-text"
             :title="`Victoire ${slotLabel(tournament, game, 'a')}`"
             @click="setWinner('a')"
           >
@@ -126,7 +126,7 @@ function setWinner(slot: 'a' | 'b') {
           <button
             v-if="teamsKnown"
             type="button"
-            class="cursor-pointer rounded border border-line px-1 text-[10px] text-muted hover:text-text"
+            class="cursor-pointer rounded-full bg-surface-alt px-2 py-0.5 text-[10px] font-bold text-muted hover:bg-primary hover:text-primary-text"
             :title="`Victoire ${slotLabel(tournament, game, 'b')}`"
             @click="setWinner('b')"
           >

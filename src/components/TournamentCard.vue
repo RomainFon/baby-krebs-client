@@ -17,29 +17,26 @@ const progress = computed(() =>
 </script>
 
 <template>
+  <!-- À la une : bloc lime, comme la carte de match de la maquette. -->
   <RouterLink
     v-if="featured"
     :to="{ name: 'bracket', params: { tournamentId: tournament.id } }"
-    class="card flex flex-col gap-4 p-5 transition-colors hover:bg-surface-alt sm:p-6"
-    style="
-      background:
-        radial-gradient(
-          120% 120% at 0% 0%,
-          color-mix(in srgb, var(--color-primary) 14%, transparent),
-          transparent 60%
-        ),
-        var(--color-surface);
-    "
+    class="group flex flex-col gap-6 rounded-3xl bg-surface p-6 ring-1 ring-line transition-transform hover:-translate-y-0.5 sm:p-8"
   >
-    <div class="flex flex-wrap items-baseline justify-between gap-2">
-      <h3 class="font-display text-2xl font-extrabold">{{ tournament.name }}</h3>
-      <span class="text-sm text-primary">{{ STATUS_LABELS[tournament.status] }} →</span>
+    <div class="flex items-center justify-between gap-3">
+      <span class="live-badge"
+        ><span class="h-2 w-2 animate-pulse rounded-full bg-live" /> Live</span
+      >
+      <span class="text-sm font-semibold text-primary"
+        >{{ STATUS_LABELS[tournament.status] }} →</span
+      >
     </div>
-    <div class="flex flex-col gap-1.5">
-      <div class="h-2 overflow-hidden rounded-full bg-background">
+    <h3 class="display text-4xl sm:text-6xl">{{ tournament.name }}</h3>
+    <div class="flex flex-col gap-2">
+      <div class="h-2.5 overflow-hidden rounded-full bg-surface-alt">
         <div class="h-full rounded-full bg-primary" :style="{ width: `${progress}%` }" />
       </div>
-      <p class="text-xs text-muted">
+      <p class="text-sm text-muted">
         {{ tournament.games_played }} /
         {{ plural(tournament.games_total, 'match', 'matchs') }} joués ·
         {{ tournament.teams_count }} équipes
@@ -53,19 +50,19 @@ const progress = computed(() =>
       name: tournament.status === 'draft' ? 'teams' : 'bracket',
       params: { tournamentId: tournament.id },
     }"
-    class="card flex items-center justify-between gap-3 px-4 py-3 hover:bg-surface-alt"
+    class="flex items-center justify-between gap-4 rounded-3xl bg-surface px-5 py-4 transition-colors hover:bg-surface-alt"
   >
     <div class="min-w-0">
-      <p class="truncate font-semibold">{{ tournament.name }}</p>
-      <p v-if="tournament.champion" class="truncate text-xs text-muted">
-        🏆 <span class="text-final">{{ tournament.champion.name }}</span> ·
+      <p class="display truncate text-2xl">{{ tournament.name }}</p>
+      <p v-if="tournament.champion" class="truncate text-sm text-muted">
+        🏆 <span class="font-semibold text-primary">{{ tournament.champion.name }}</span> ·
         {{ tournament.champion.players.join(' & ') }}
       </p>
-      <p v-else class="text-xs text-muted">
+      <p v-else class="text-sm text-muted">
         {{ plural(tournament.teams_count, 'équipe inscrite', 'équipes inscrites') }}
       </p>
     </div>
-    <span class="shrink-0 text-xs text-muted">
+    <span class="shrink-0 rounded-full bg-surface-alt px-3 py-1 text-xs font-medium text-muted">
       {{
         tournament.status === 'draft'
           ? tournament.starts_at

@@ -19,6 +19,8 @@ import type { PlayerWithStats, Stage, Team, TournamentDetail } from '@/types'
 import FormatFields from '@/components/admin/FormatFields.vue'
 import TeamForm from '@/components/admin/TeamForm.vue'
 import PlayerFormModal from '@/components/admin/PlayerFormModal.vue'
+import PageTitle from '@/components/ui/PageTitle.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 import GameAdminRow from '@/components/admin/GameAdminRow.vue'
 
 const props = defineProps<{ tournamentId: number }>()
@@ -221,56 +223,53 @@ const gameSections = computed(() => {
 
 <template>
   <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
-    <RouterLink :to="{ name: 'admin' }" class="text-sm text-muted hover:text-text"
-      >← Tous les tournois</RouterLink
+    <RouterLink
+      :to="{ name: 'admin' }"
+      class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-alt text-muted hover:text-text"
+      aria-label="Tous les tournois"
     >
+      <AppIcon name="arrow-left" class="h-5 w-5" />
+    </RouterLink>
 
     <p v-if="!tournament" class="text-sm text-muted">{{ store.error ?? 'Chargement…' }}</p>
 
     <template v-else>
-      <header class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-baseline gap-3">
-          <h1 class="font-display text-2xl font-extrabold">{{ tournament.name }}</h1>
-          <span class="rounded-full border border-line px-2 py-0.5 text-xs text-muted">
-            {{ STATUS_LABELS[tournament.status] }}
-          </span>
-        </div>
+      <PageTitle
+        :kicker="`Admin · ${STATUS_LABELS[tournament.status]}`"
+        :title="tournament.name"
+        size="lg"
+      >
         <RouterLink
           :to="{ name: 'bracket', params: { tournamentId: tournament.id } }"
           class="btn-ghost"
         >
           Voir le tableau public →
         </RouterLink>
-      </header>
+      </PageTitle>
 
-      <p
-        v-if="error"
-        class="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
-      >
+      <p v-if="error" class="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">
         {{ error }}
       </p>
 
-      <nav class="flex gap-1 rounded-lg border border-line bg-surface p-1 text-sm sm:w-fit">
+      <nav class="flex gap-1.5 overflow-x-auto rounded-full bg-surface p-1.5 sm:w-fit">
         <RouterLink
           v-for="t in TABS"
           :key="t.key"
           :to="{ query: { onglet: t.key } }"
           replace
-          class="flex flex-1 items-center justify-center gap-1.5 rounded-md px-4 py-1.5 sm:flex-none"
-          :class="
-            tab === t.key ? 'bg-surface-alt font-semibold text-text' : 'text-muted hover:text-text'
-          "
+          class="pill flex-1 sm:flex-none sm:px-6"
+          :class="tab === t.key && 'pill-active'"
         >
           {{ t.label }}
           <span
             v-if="t.key === 'equipes'"
-            class="rounded-full bg-background px-1.5 text-[11px] text-muted tabular-nums"
+            class="rounded-full bg-ink/20 px-1.5 text-[11px] tabular-nums"
           >
             {{ tournament.teams.length }}
           </span>
           <span
             v-if="t.key === 'matchs' && gamesToPlay"
-            class="rounded-full bg-primary/15 px-1.5 text-[11px] text-primary tabular-nums"
+            class="rounded-full bg-ink/20 px-1.5 text-[11px] tabular-nums"
           >
             {{ gamesToPlay }}
           </span>
@@ -279,8 +278,8 @@ const gameSections = computed(() => {
 
       <div v-if="tab === 'infos'" class="flex flex-col gap-6">
         <!-- Réglages -->
-        <form class="card flex flex-col gap-4 p-5" @submit.prevent="saveSettings">
-          <h2 class="font-display text-lg font-extrabold">Infos et format</h2>
+        <form class="card flex flex-col gap-4 p-6" @submit.prevent="saveSettings">
+          <h2 class="section-title">Infos et format</h2>
           <label class="text-sm">
             <span class="mb-1 block text-muted">Nom</span>
             <input v-model="settings.name" required maxlength="100" class="field" />
@@ -298,8 +297,8 @@ const gameSections = computed(() => {
           </div>
         </form>
 
-        <section class="card flex flex-col gap-3 border-danger/30 p-5">
-          <h2 class="font-display text-lg font-extrabold text-danger">Zone de danger</h2>
+        <section class="card flex flex-col gap-3 p-6 ring-1 ring-danger/30">
+          <h2 class="section-title text-danger">Zone de danger</h2>
           <div>
             <button type="button" class="btn-danger" @click="removeTournament">
               Supprimer le tournoi
@@ -310,18 +309,21 @@ const gameSections = computed(() => {
 
       <div v-else-if="tab === 'equipes'" class="flex flex-col gap-6">
         <!-- Tirage -->
-        <section v-if="showDraw" class="card flex flex-col gap-3 p-5">
-          <h2 class="font-display text-lg font-extrabold">Tirage au sort</h2>
+        <section
+          v-if="showDraw"
+          class="flex flex-col gap-3 rounded-3xl bg-primary p-6 text-primary-text"
+        >
+          <h2 class="display text-3xl">Tirage au sort</h2>
           <template v-if="isDraft">
-            <p class="text-sm text-muted">
+            <p class="text-sm opacity-70">
               Répartit les équipes au hasard dans les poules, puis génère tous les matchs de poule
               et l'arbre de la phase finale.
             </p>
-            <p v-if="formatError" class="text-sm text-danger">{{ formatError }}</p>
+            <p v-if="formatError" class="text-sm font-semibold">{{ formatError }}</p>
             <div>
               <button
                 type="button"
-                class="btn-primary"
+                class="btn bg-ink text-text hover:bg-ink/85"
                 :disabled="busy || !!formatError"
                 @click="draw"
               >
@@ -330,14 +332,24 @@ const gameSections = computed(() => {
             </div>
           </template>
           <template v-else>
-            <p class="text-sm text-muted">
+            <p class="text-sm opacity-70">
               Aucun score saisi : le tirage peut encore être refait ou annulé.
             </p>
             <div class="flex flex-wrap gap-2">
-              <button type="button" class="btn-ghost" :disabled="busy" @click="draw">
+              <button
+                type="button"
+                class="btn bg-ink text-text hover:bg-ink/85"
+                :disabled="busy"
+                @click="draw"
+              >
                 🎲 Refaire le tirage
               </button>
-              <button type="button" class="btn-danger" :disabled="busy" @click="cancelDraw">
+              <button
+                type="button"
+                class="btn bg-ink/10 hover:bg-ink/20"
+                :disabled="busy"
+                @click="cancelDraw"
+              >
                 Annuler le tirage
               </button>
             </div>
@@ -345,11 +357,9 @@ const gameSections = computed(() => {
         </section>
 
         <!-- Équipes -->
-        <section class="card flex flex-col gap-4 p-5">
+        <section class="card flex flex-col gap-4 p-6">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="font-display text-lg font-extrabold">
-              Équipes ({{ tournament.teams.length }})
-            </h2>
+            <h2 class="section-title">Équipes ({{ tournament.teams.length }})</h2>
             <button type="button" class="btn-ghost py-1 text-xs" @click="isCreatingPlayer = true">
               + Créer un joueur
             </button>
@@ -422,7 +432,7 @@ const gameSections = computed(() => {
         <!-- Matchs -->
         <section v-if="tournament.games.length" class="flex flex-col gap-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="font-display text-lg font-extrabold">Matchs : dates et scores</h2>
+            <h2 class="section-title">Matchs : dates et scores</h2>
             <div class="flex gap-1 text-xs">
               <button
                 v-for="f in [
@@ -431,10 +441,8 @@ const gameSections = computed(() => {
                 ] as const"
                 :key="f.key"
                 type="button"
-                class="cursor-pointer rounded-full border px-3 py-1"
-                :class="
-                  gameFilter === f.key ? 'border-primary bg-primary/10' : 'border-line text-muted'
-                "
+                class="pill py-1.5 text-xs"
+                :class="gameFilter === f.key && 'pill-active'"
                 @click="gameFilter = f.key"
               >
                 {{ f.label }}
@@ -449,7 +457,7 @@ const gameSections = computed(() => {
             Tous les matchs ont été joués 🎉
           </p>
           <div v-for="section in gameSections" :key="section.stage" class="flex flex-col gap-2">
-            <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+            <h3 class="section-title">
               {{ section.title }}
             </h3>
             <GameAdminRow

@@ -5,6 +5,7 @@ import { fetchPlayer } from '@/api/tournaments'
 import type { PlayerDetail } from '@/types'
 import { formatDate, STAGE_ACCENT, STATUS_LABELS } from '@/lib/tournament'
 import { percent, plural, signed } from '@/lib/format'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps<{ playerId: number }>()
 
@@ -31,11 +32,11 @@ const tiles = computed(() => {
     { label: 'Matchs', value: s.played },
     { label: 'Victoires', value: s.wins, cls: 'text-winner' },
     { label: 'Défaites', value: s.losses, cls: 'text-loser' },
-    { label: '% victoires', value: s.played ? percent(s.win_rate) : '–' },
+    { label: '% victoires', value: s.played ? percent(s.win_rate) : '–', variant: 'lime' },
     { label: 'Buts pour', value: s.goals_for },
     { label: 'Buts contre', value: s.goals_against },
     { label: 'Différence', value: signed(s.goal_diff) },
-    { label: 'Titres', value: s.titles ? `🏆 ${s.titles}` : '0' },
+    { label: 'Titres', value: s.titles ? `🏆 ${s.titles}` : '0', variant: 'paper' },
   ]
 })
 
@@ -54,23 +55,41 @@ const verdict = computed(() => {
 
 <template>
   <main class="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6">
-    <RouterLink :to="{ name: 'players' }" class="text-sm text-muted hover:text-text"
-      >← Tous les joueurs</RouterLink
+    <RouterLink
+      :to="{ name: 'players' }"
+      class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-alt text-muted hover:text-text"
+      aria-label="Tous les joueurs"
     >
+      <AppIcon name="arrow-left" class="h-5 w-5" />
+    </RouterLink>
 
     <p v-if="error" class="text-sm text-danger">{{ error }}</p>
     <p v-else-if="!player" class="text-sm text-muted">Chargement…</p>
 
     <template v-else>
       <header>
-        <h1 class="font-display text-3xl font-extrabold">{{ player.name }}</h1>
+        <p class="kicker">Joueur</p>
+        <h1 class="display text-6xl sm:text-8xl">{{ player.name }}</h1>
         <p class="text-muted">{{ verdict }}</p>
       </header>
 
       <dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div v-for="t in tiles" :key="t.label" class="card px-4 py-3">
-          <dt class="text-xs text-muted">{{ t.label }}</dt>
-          <dd class="font-display text-2xl font-extrabold tabular-nums" :class="t.cls">
+        <div
+          v-for="t in tiles"
+          :key="t.label"
+          class="rounded-3xl px-5 py-4"
+          :class="
+            'variant' in t
+              ? t.variant === 'lime'
+                ? 'bg-primary text-primary-text'
+                : 'bg-paper text-ink'
+              : 'bg-surface'
+          "
+        >
+          <dt class="text-xs" :class="'variant' in t ? 'opacity-60' : 'text-muted'">
+            {{ t.label }}
+          </dt>
+          <dd class="display text-3xl tabular-nums" :class="t.cls">
             {{ t.value }}
           </dd>
         </div>
@@ -78,7 +97,7 @@ const verdict = computed(() => {
 
       <div class="grid gap-6 md:grid-cols-2">
         <section class="flex flex-col gap-2">
-          <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">Coéquipiers</h2>
+          <h2 class="section-title">Coéquipiers</h2>
           <p v-if="player.partners.length === 0" class="text-sm text-muted">
             Aucun pour l'instant.
           </p>
@@ -96,7 +115,7 @@ const verdict = computed(() => {
         </section>
 
         <section class="flex flex-col gap-2">
-          <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">Tournois</h2>
+          <h2 class="section-title">Tournois</h2>
           <RouterLink
             v-for="team in player.teams"
             :key="team.id"
@@ -117,7 +136,7 @@ const verdict = computed(() => {
       </div>
 
       <section class="flex flex-col gap-2">
-        <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">Derniers matchs</h2>
+        <h2 class="section-title">Derniers matchs</h2>
         <p v-if="player.games.length === 0" class="text-sm text-muted">Aucun match joué.</p>
         <RouterLink
           v-for="game in player.games"
@@ -145,7 +164,7 @@ const verdict = computed(() => {
             >
               {{ game.score_for > game.score_against ? 'V' : 'D' }}
             </span>
-            <span class="font-display text-lg font-extrabold tabular-nums">
+            <span class="display text-2xl tabular-nums">
               {{ game.score_for }}–{{ game.score_against }}
             </span>
           </div>

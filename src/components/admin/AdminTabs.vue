@@ -10,17 +10,13 @@ const TABS = [
 </script>
 
 <template>
-  <nav class="flex gap-1 rounded-lg border border-line bg-surface p-1 text-sm sm:w-fit">
+  <nav class="flex gap-1.5 overflow-x-auto rounded-full bg-surface p-1.5 sm:w-fit">
     <RouterLink
       v-for="tab in TABS"
       :key="tab.name"
       :to="{ name: tab.name }"
-      class="flex-1 rounded-md px-4 py-1.5 text-center sm:flex-none"
-      :class="
-        route.name === tab.name
-          ? 'bg-surface-alt font-semibold text-text'
-          : 'text-muted hover:text-text'
-      "
+      class="pill flex-1 sm:flex-none sm:px-6"
+      :class="route.name === tab.name && 'pill-active'"
     >
       {{ tab.label }}
     </RouterLink>

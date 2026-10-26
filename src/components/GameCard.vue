@@ -42,31 +42,44 @@ const rows = computed(() =>
     :class="dimmed ? 'opacity-25' : 'opacity-100'"
     @click="$emit('open', game)"
   >
-    <div class="mb-1 flex items-center justify-between gap-2 px-1 text-[11px] text-muted">
-      <span>M{{ game.number }}</span>
+    <div class="mb-1.5 flex items-center justify-between gap-2 px-1 text-[11px] text-muted">
+      <span class="font-semibold">M{{ game.number }}</span>
       <span>{{
         game.played_at || game.scheduled_at ? formatDate(game.scheduled_at ?? game.played_at) : ''
       }}</span>
     </div>
     <div
-      class="overflow-hidden rounded-lg border bg-surface transition-colors group-hover:bg-surface-alt"
-      :class="involved ? 'border-primary ring-1 ring-primary' : 'border-line'"
-      :style="{ borderLeft: `3px solid ${STAGE_ACCENT[game.stage]}` }"
+      class="relative overflow-hidden rounded-2xl bg-surface transition-colors group-hover:bg-surface-alt"
+      :class="involved ? 'ring-2 ring-primary' : game.stage === 'final' && 'ring-1 ring-primary/40'"
     >
+      <span
+        class="absolute inset-y-3 left-0 w-1 rounded-r-full"
+        :style="{ background: STAGE_ACCENT[game.stage] }"
+      />
       <div
         v-for="row in rows"
         :key="row.slot"
-        class="flex items-center justify-between gap-2 px-3 py-1.5 text-sm not-last:border-b not-last:border-line"
+        class="flex items-center justify-between gap-2 py-2 pr-2 pl-4 text-sm"
         :class="[
           winner === row.slot ? 'font-semibold text-text' : winner ? 'text-muted' : '',
-          row.teamId === null ? 'italic text-muted' : '',
+          row.teamId === null ? 'text-muted italic' : '',
           highlightTeamId != null && row.teamId === highlightTeamId ? 'bg-primary/10' : '',
         ]"
       >
         <span class="truncate">{{ row.label }}</span>
-        <span class="tabular-nums">{{ row.score ?? '' }}</span>
+        <span
+          v-if="row.score !== null"
+          class="flex h-6 min-w-7 items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums"
+          :class="
+            winner === row.slot ? 'bg-primary text-primary-text' : 'bg-surface-alt text-muted'
+          "
+        >
+          {{ row.score }}
+        </span>
       </div>
     </div>
-    <p v-if="destination" class="mt-1 px-1 text-[11px] text-loser">↘ Perdant → {{ destination }}</p>
+    <p v-if="destination" class="mt-1.5 px-1 text-[11px] text-muted">
+      ↘ Perdant → {{ destination }}
+    </p>
   </button>
 </template>

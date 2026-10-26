@@ -14,6 +14,7 @@ import {
   teamStatus,
 } from '@/lib/tournament'
 import GameModal from '@/components/GameModal.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps<{ tournament: TournamentDetail; teamId: number }>()
 
@@ -59,14 +60,15 @@ function result(game: Game) {
   <div v-if="team" class="flex flex-col gap-6">
     <RouterLink
       :to="{ name: 'teams', params: { tournamentId: tournament.id } }"
-      class="text-sm text-muted hover:text-text"
+      class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-alt text-muted hover:text-text"
+      aria-label="Toutes les équipes"
     >
-      ← Toutes les équipes
+      <AppIcon name="arrow-left" class="h-5 w-5" />
     </RouterLink>
 
     <section class="card flex flex-col gap-4 p-5">
       <div>
-        <h2 class="font-display text-2xl font-extrabold">{{ team.name }}</h2>
+        <h2 class="display text-5xl sm:text-6xl">{{ team.name }}</h2>
         <p class="text-muted">
           <template v-for="(p, i) in team.players" :key="p.id">
             <span v-if="i > 0"> & </span>
@@ -81,9 +83,9 @@ function result(game: Game) {
         <p class="mt-1 text-sm">{{ status }}</p>
       </div>
       <dl class="grid grid-cols-3 gap-3 text-center sm:grid-cols-6">
-        <div v-for="item in statItems" :key="item.label" class="rounded-lg bg-background/50 py-2">
+        <div v-for="item in statItems" :key="item.label" class="rounded-2xl bg-surface-alt py-3">
           <dt class="text-[11px] text-muted">{{ item.label }}</dt>
-          <dd class="font-display text-xl font-extrabold tabular-nums" :class="item.cls">
+          <dd class="display text-3xl tabular-nums" :class="item.cls">
             {{ item.value }}
           </dd>
         </div>
@@ -91,7 +93,7 @@ function result(game: Game) {
     </section>
 
     <section class="flex flex-col gap-2">
-      <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">Prochains matchs</h3>
+      <h3 class="section-title">Prochains matchs</h3>
       <p v-if="upcoming.length === 0" class="text-sm text-muted">Aucun match à venir.</p>
       <button
         v-for="game in upcoming"
@@ -112,7 +114,7 @@ function result(game: Game) {
     </section>
 
     <section class="flex flex-col gap-2">
-      <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">Matchs joués</h3>
+      <h3 class="section-title">Matchs joués</h3>
       <p v-if="played.length === 0" class="text-sm text-muted">Aucun match joué pour l'instant.</p>
       <button
         v-for="game in played"
@@ -135,7 +137,7 @@ function result(game: Game) {
           >
             {{ result(game).won ? 'V' : 'D' }}
           </span>
-          <span class="font-display text-lg font-extrabold tabular-nums">
+          <span class="display text-2xl tabular-nums">
             {{ result(game).own }}–{{ result(game).other }}
           </span>
         </div>

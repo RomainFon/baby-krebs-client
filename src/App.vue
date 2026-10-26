@@ -8,6 +8,7 @@ const route = useRoute()
 <template>
   <div class="flex min-h-screen flex-col">
     <AppNav v-if="route.meta.showNav !== false" />
-    <RouterView class="flex-1" />
+    <!-- Marge basse sur mobile : place pour la barre d'onglets flottante. -->
+    <RouterView class="flex-1" :class="route.meta.showNav !== false && 'pb-28 md:pb-10'" />
   </div>
 </template>

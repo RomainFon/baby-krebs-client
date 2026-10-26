@@ -25,7 +25,7 @@ function qualification(rank: number): 'winner' | 'loser' | 'out' {
   return 'out'
 }
 
-const QUALIF_BAR = { winner: 'bg-winner', loser: 'bg-loser', out: 'bg-line' }
+const QUALIF_BAR = { winner: 'bg-winner', loser: 'bg-loser', out: 'bg-surface-alt' }
 
 function signed(n: number): string {
   return n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0'
@@ -33,16 +33,16 @@ function signed(n: number): string {
 </script>
 
 <template>
-  <section class="card overflow-hidden">
-    <header class="flex items-center justify-between border-b border-line px-4 py-2.5">
-      <h3 class="font-display font-extrabold">Poule {{ pool.name }}</h3>
+  <section class="overflow-hidden rounded-3xl bg-surface">
+    <header class="flex items-center justify-between px-5 pt-5 pb-3">
+      <h3 class="display text-3xl">Poule {{ pool.name }}</h3>
       <span class="text-xs text-muted">V · D · diff</span>
     </header>
     <ol>
       <li
         v-for="row in pool.standings"
         :key="row.team_id"
-        class="flex items-center gap-3 px-4 py-2 text-sm not-last:border-b not-last:border-line transition-opacity"
+        class="mx-2 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-opacity"
         :class="[
           highlightTeamId != null && row.team_id !== highlightTeamId ? 'opacity-30' : '',
           highlightTeamId === row.team_id ? 'bg-primary/10' : '',
@@ -59,12 +59,12 @@ function signed(n: number): string {
     </ol>
     <button
       type="button"
-      class="w-full cursor-pointer border-t border-line px-4 py-2 text-left text-xs text-muted hover:text-text"
+      class="m-2 cursor-pointer rounded-full bg-surface-alt px-4 py-2 text-xs font-medium text-muted hover:text-text"
       @click="showGames = !showGames"
     >
       {{ showGames ? 'Masquer les matchs' : `Voir les ${games.length} matchs` }}
     </button>
-    <div v-if="showGames" class="grid gap-3 border-t border-line p-3 sm:grid-cols-2">
+    <div v-if="showGames" class="grid gap-3 p-3 pt-1 sm:grid-cols-2">
       <GameCard
         v-for="game in games"
         :key="game.id"

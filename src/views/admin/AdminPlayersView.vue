@@ -8,6 +8,7 @@ import { extractErrorMessage } from '@/lib/apiError'
 import { plural } from '@/lib/format'
 import AdminTabs from '@/components/admin/AdminTabs.vue'
 import PlayerFormModal from '@/components/admin/PlayerFormModal.vue'
+import PageTitle from '@/components/ui/PageTitle.vue'
 
 const players = ref<PlayerWithStats[]>([])
 const isLoading = ref(true)
@@ -60,7 +61,7 @@ async function remove(player: PlayerWithStats) {
 <template>
   <main class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="font-display text-2xl font-extrabold">Administration</h1>
+      <PageTitle kicker="Espace" title="Admin" />
       <button type="button" class="btn-primary" @click="openCreate">+ Nouveau joueur</button>
     </div>
     <AdminTabs />
@@ -72,10 +73,7 @@ async function remove(player: PlayerWithStats) {
       class="field sm:w-64"
     />
 
-    <p
-      v-if="error"
-      class="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
-    >
+    <p v-if="error" class="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">
       {{ error }}
     </p>
 

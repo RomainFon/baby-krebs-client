@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTournamentStore } from '@/stores/tournament'
 import TournamentCard from '@/components/TournamentCard.vue'
+import PageTitle from '@/components/ui/PageTitle.vue'
 
 const auth = useAuthStore()
 const store = useTournamentStore()
@@ -26,7 +27,7 @@ const finished = computed(() => store.list.filter((t) => t.status === 'finished'
 
 <template>
   <main class="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-6">
-    <h1 class="font-display text-2xl font-extrabold sm:text-3xl">Tournois</h1>
+    <PageTitle kicker="Explorer les" title="Tournois" />
 
     <p v-if="isLoading" class="text-sm text-muted">Chargement…</p>
     <template v-else>
@@ -38,21 +39,19 @@ const finished = computed(() => store.list.filter((t) => t.status === 'finished'
       </p>
 
       <section v-if="live.length" class="flex flex-col gap-3">
-        <h2
-          class="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted uppercase"
-        >
+        <h2 class="section-title flex items-center gap-2">
           <span class="h-2 w-2 animate-pulse rounded-full bg-loser" /> En cours
         </h2>
         <TournamentCard v-for="t in live" :key="t.id" :tournament="t" featured />
       </section>
 
       <section v-if="upcoming.length" class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">À venir</h2>
+        <h2 class="section-title">À venir</h2>
         <TournamentCard v-for="t in upcoming" :key="t.id" :tournament="t" />
       </section>
 
       <section v-if="finished.length" class="flex flex-col gap-3">
-        <h2 class="text-sm font-semibold tracking-wide text-muted uppercase">Déjà joués</h2>
+        <h2 class="section-title">Déjà joués</h2>
         <TournamentCard v-for="t in finished" :key="t.id" :tournament="t" />
       </section>
     </template>

@@ -7,6 +7,7 @@ import { STATUS_LABELS } from '@/lib/tournament'
 import { extractErrorMessage } from '@/lib/apiError'
 import AppModal from '@/components/ui/AppModal.vue'
 import AdminTabs from '@/components/admin/AdminTabs.vue'
+import PageTitle from '@/components/ui/PageTitle.vue'
 
 const router = useRouter()
 const store = useTournamentStore()
@@ -46,7 +47,7 @@ async function handleCreate() {
 <template>
   <main class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="font-display text-2xl font-extrabold">Administration</h1>
+      <PageTitle kicker="Espace" title="Admin" />
       <button type="button" class="btn-primary" @click="openCreate">+ Nouveau tournoi</button>
     </div>
     <AdminTabs />
@@ -70,7 +71,7 @@ async function handleCreate() {
             qualifiés par poule
           </p>
         </div>
-        <span class="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-muted">
+        <span class="shrink-0 rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-muted">
           {{ STATUS_LABELS[t.status] }}
         </span>
       </RouterLink>
