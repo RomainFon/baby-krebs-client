@@ -31,9 +31,10 @@ premier certificat Let's Encrypt peut prendre quelques secondes.
 
 ## Mise à jour
 
+La mise à jour du code (git) est faite par **RoPloy**. Une fois le code à
+jour, `deploy.sh` reconstruit et redémarre le conteneur. Le script ne fait
+aucune commande git.
+
 ```bash
 cd /srv/apps/baby-krebs-client && ./deploy.sh
 ```
-
-Le script fait un `git pull`, puis rebuild et redémarre le conteneur. Il
-refuse de tourner s'il y a des modifications locales non commitées.
