@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed } from 'vue'
 import type { Game, TournamentDetail } from '@/types'
-import { gameTitle, slotLabel } from '@/lib/tournament'
+import { gameTitle, slotLabel, teamById } from '@/lib/tournament'
 
 // Affiche d'un match façon maquette : bloc lime "Équipe VS Équipe", puis
 // bloc blanc avec la phase, l'heure en grand et la date.
@@ -26,17 +27,23 @@ const day = computed(() =>
     <div
       class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-t-3xl bg-primary px-5 py-6 text-primary-text"
     >
-      <p class="display text-center text-2xl break-words sm:text-3xl">
-        {{ slotLabel(tournament, game, 'a') }}
-      </p>
+      <div class="flex flex-col items-center gap-2 text-center">
+        <TeamBadge :team="teamById(tournament, game.team_a_id)" size="lg" />
+        <p class="display text-2xl break-words sm:text-3xl">
+          {{ slotLabel(tournament, game, 'a') }}
+        </p>
+      </div>
       <span
         class="flex h-14 w-14 items-center justify-center rounded-full bg-ink font-display text-xl text-text transition-transform group-hover:scale-110"
       >
         VS
       </span>
-      <p class="display text-center text-2xl break-words sm:text-3xl">
-        {{ slotLabel(tournament, game, 'b') }}
-      </p>
+      <div class="flex flex-col items-center gap-2 text-center">
+        <TeamBadge :team="teamById(tournament, game.team_b_id)" size="lg" />
+        <p class="display text-2xl break-words sm:text-3xl">
+          {{ slotLabel(tournament, game, 'b') }}
+        </p>
+      </div>
     </div>
     <div class="grid grid-cols-3 items-center gap-2 rounded-b-3xl bg-paper px-5 py-4 text-ink">
       <p class="font-display text-sm leading-tight uppercase sm:text-base">

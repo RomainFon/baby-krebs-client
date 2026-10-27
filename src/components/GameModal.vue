@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppModal from '@/components/ui/AppModal.vue'
@@ -28,6 +29,11 @@ const sides = computed(() => {
       placeholder: team ? null : placeholderLabel(props.tournament, game, slot),
       score: slot === 'a' ? game.score_a : game.score_b,
       won: winnerSlot(game) === slot,
+      // Joueurs avec leurs buts dans ce match (null si buteurs non saisis).
+      players: (team?.players ?? []).map((p) => ({
+        ...p,
+        goals: game.goals.find((g) => g.player_id === p.id)?.goals ?? null,
+      })),
     }
   })
 })
@@ -45,7 +51,8 @@ const sides = computed(() => {
       <!-- Affiche : équipe A · score · équipe B -->
       <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
         <template v-for="(side, i) in sides" :key="side.slot">
-          <div class="flex min-w-0 flex-col items-center gap-1" :class="i === 1 && 'order-3'">
+          <div class="flex min-w-0 flex-col items-center gap-1.5" :class="i === 1 && 'order-3'">
+            <TeamBadge :team="side.team" size="lg" />
             <RouterLink
               v-if="side.team"
               :to="{ name: 'team', params: { tournamentId: tournament.id, teamId: side.team.id } }"
@@ -56,9 +63,14 @@ const sides = computed(() => {
               {{ side.team.name }}
             </RouterLink>
             <p v-else class="text-sm text-muted italic">{{ side.placeholder }}</p>
-            <p v-if="side.team" class="text-xs text-muted">
-              {{ side.team.players.map((p) => p.name).join(' & ') }}
-            </p>
+            <ul v-if="side.team" class="flex flex-col items-center text-xs text-muted">
+              <li v-for="p in side.players" :key="p.id">
+                {{ p.name }}
+                <span v-if="p.goals !== null" class="font-semibold text-text"
+                  >· {{ p.goals }} ⚽</span
+                >
+              </li>
+            </ul>
           </div>
         </template>
         <p class="order-2 display text-6xl tabular-nums">

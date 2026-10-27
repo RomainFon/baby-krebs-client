@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed, ref } from 'vue'
 import type { Game, TournamentDetail } from '@/types'
-import { gameTitle, isPlayed, slotLabel, STAGE_ACCENT, winnerSlot } from '@/lib/tournament'
+import {
+  gameTitle,
+  isPlayed,
+  slotLabel,
+  STAGE_ACCENT,
+  winnerSlot,
+  teamById,
+} from '@/lib/tournament'
 import GameModal from '@/components/GameModal.vue'
 
 const props = defineProps<{ tournament: TournamentDetail }>()
@@ -108,7 +116,10 @@ function time(game: Game): string {
                 winnerSlot(game) === 'b' && 'text-muted',
               ]"
             >
-              {{ slotLabel(tournament, game, 'a') }}
+              <span class="inline-flex max-w-full items-center justify-end gap-2">
+                <span class="truncate">{{ slotLabel(tournament, game, 'a') }}</span>
+                <TeamBadge :team="teamById(tournament, game.team_a_id)" size="xs" />
+              </span>
             </span>
             <span class="font-display tabular-nums">
               <template v-if="isPlayed(game)">{{ game.score_a }} – {{ game.score_b }}</template>
@@ -122,7 +133,10 @@ function time(game: Game): string {
                 winnerSlot(game) === 'a' && 'text-muted',
               ]"
             >
-              {{ slotLabel(tournament, game, 'b') }}
+              <span class="inline-flex max-w-full items-center gap-2">
+                <TeamBadge :team="teamById(tournament, game.team_b_id)" size="xs" />
+                <span class="truncate">{{ slotLabel(tournament, game, 'b') }}</span>
+              </span>
             </span>
           </div>
         </div>

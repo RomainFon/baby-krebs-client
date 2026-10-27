@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed } from 'vue'
 import type { Game, Slot, TournamentDetail } from '@/types'
-import { formatDate, loserDestination, slotLabel, STAGE_ACCENT, winnerSlot } from '@/lib/tournament'
+import {
+  formatDate,
+  loserDestination,
+  slotLabel,
+  STAGE_ACCENT,
+  teamById,
+  winnerSlot,
+} from '@/lib/tournament'
 
 const props = defineProps<{
   tournament: TournamentDetail
@@ -29,6 +37,7 @@ const rows = computed(() =>
   (['a', 'b'] as Slot[]).map((slot) => ({
     slot,
     teamId: slot === 'a' ? props.game.team_a_id : props.game.team_b_id,
+    team: teamById(props.tournament, slot === 'a' ? props.game.team_a_id : props.game.team_b_id),
     label: slotLabel(props.tournament, props.game, slot),
     score: slot === 'a' ? props.game.score_a : props.game.score_b,
   })),
@@ -66,7 +75,10 @@ const rows = computed(() =>
           highlightTeamId != null && row.teamId === highlightTeamId ? 'bg-primary/10' : '',
         ]"
       >
-        <span class="truncate">{{ row.label }}</span>
+        <span class="flex min-w-0 items-center gap-2">
+          <TeamBadge :team="row.team" size="xs" />
+          <span class="truncate">{{ row.label }}</span>
+        </span>
         <span
           v-if="row.score !== null"
           class="flex h-6 min-w-7 items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums"

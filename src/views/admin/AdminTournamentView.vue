@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   createTeam,
   deleteTeam,
+  deleteTeamLogo,
+  uploadTeamLogo,
   deleteTournament,
   drawTournament,
   fetchPlayers,
@@ -152,6 +155,17 @@ async function saveTeam(team: Team, payload: TeamPayload) {
   if (await run(() => updateTeam(team.id, payload), "Impossible de modifier l'équipe.")) {
     editingTeamId.value = null
   }
+}
+
+function onLogoSelected(team: Team, event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (file) run(() => uploadTeamLogo(team.id, file), "Impossible d'envoyer le logo.")
+}
+
+function removeLogo(team: Team) {
+  run(() => deleteTeamLogo(team.id), 'Impossible de retirer le logo.')
 }
 
 function removeTeam(team: Team) {
@@ -384,6 +398,7 @@ const gameSections = computed(() => {
                 v-if="editingTeamId === team.id"
                 :initial="{
                   name: team.name,
+                  color: team.color ?? undefined,
                   players: [team.players[0].id, team.players[1].id],
                 }"
                 submit-label="Enregistrer"
@@ -394,7 +409,25 @@ const gameSections = computed(() => {
                 @cancel="editingTeamId = null"
               />
               <div v-else class="flex items-center justify-between gap-3">
-                <div class="min-w-0">
+                <!-- Clic sur l'écusson : envoyer / remplacer le logo. -->
+                <label
+                  class="group relative shrink-0 cursor-pointer"
+                  :title="team.logo_url ? 'Changer le logo' : 'Ajouter un logo'"
+                >
+                  <TeamBadge :team="team" size="md" />
+                  <span
+                    class="absolute inset-0 flex items-center justify-center rounded-full bg-black/60 text-[10px] font-semibold opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    Logo
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    class="sr-only"
+                    @change="onLogoSelected(team, $event)"
+                  />
+                </label>
+                <div class="min-w-0 flex-1">
                   <p class="truncate font-medium">
                     {{ team.name }}
                     <span v-if="team.pool_id" class="ml-1 text-xs text-muted"
@@ -406,6 +439,14 @@ const gameSections = computed(() => {
                   </p>
                 </div>
                 <div class="flex shrink-0 gap-2">
+                  <button
+                    v-if="team.logo_url"
+                    type="button"
+                    class="btn-ghost py-1 text-xs"
+                    @click="removeLogo(team)"
+                  >
+                    Retirer le logo
+                  </button>
                   <button
                     type="button"
                     class="btn-ghost py-1 text-xs"

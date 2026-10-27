@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed, ref } from 'vue'
 import type { Game, Pool, TournamentDetail } from '@/types'
 import { teamById } from '@/lib/tournament'
@@ -50,6 +51,7 @@ function signed(n: number): string {
       >
         <span class="h-5 w-1 rounded-full" :class="QUALIF_BAR[qualification(row.rank)]" />
         <span class="w-4 text-muted tabular-nums">{{ row.rank }}</span>
+        <TeamBadge :team="teamById(tournament, row.team_id)" size="sm" />
         <span class="flex-1 truncate font-medium">{{
           teamById(tournament, row.team_id)?.name
         }}</span>

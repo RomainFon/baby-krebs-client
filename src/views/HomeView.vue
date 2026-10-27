@@ -79,7 +79,10 @@ const funTiles = computed(() => {
       emoji: '🔫',
       label: 'Gâchette d’or',
       value: s.top_scorer.name,
-      detail: `${plural(s.top_scorer.stats.goals_for, 'but')} marqués`,
+      // Vrais buts perso dès que des buteurs ont été saisis, sinon ceux de son équipe.
+      detail: s.top_scorer.stats.goals_scored
+        ? `${plural(s.top_scorer.stats.goals_scored, 'but')} marqués`
+        : `${plural(s.top_scorer.stats.goals_for, 'but')} marqués avec son équipe`,
       to: playerLink(s.top_scorer),
     },
     s.leakiest && {

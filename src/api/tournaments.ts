@@ -1,5 +1,6 @@
 import { http } from './client'
 import type {
+  GameGoal,
   GlobalStats,
   PlayerDetail,
   PlayerRef,
@@ -56,6 +57,8 @@ export interface TeamPayload {
   name: string
   // Identifiants de joueurs existants.
   players: [number, number]
+  // Couleur de l'écusson ; attribuée automatiquement par l'API si absente.
+  color?: string
 }
 
 export function createTeam(tournamentId: number, payload: TeamPayload): Detail {
@@ -66,6 +69,16 @@ export function updateTeam(teamId: number, payload: TeamPayload): Detail {
   return unwrap(http.patch(`/api/teams/${teamId}`, payload))
 }
 
+export function uploadTeamLogo(teamId: number, file: File): Detail {
+  const form = new FormData()
+  form.append('logo', file)
+  return unwrap(http.post(`/api/teams/${teamId}/logo`, form))
+}
+
+export function deleteTeamLogo(teamId: number): Detail {
+  return unwrap(http.delete(`/api/teams/${teamId}/logo`))
+}
+
 export function deleteTeam(teamId: number): Detail {
   return unwrap(http.delete(`/api/teams/${teamId}`))
 }
@@ -74,6 +87,8 @@ export interface GamePayload {
   scheduled_at?: string | null
   score_a?: number | null
   score_b?: number | null
+  // Buteurs : liste complète, remplace l'existant.
+  goals?: GameGoal[]
 }
 
 export function updateGame(gameId: number, payload: GamePayload): Detail {

@@ -33,7 +33,8 @@ const tiles = computed(() => {
     { label: 'Victoires', value: s.wins, cls: 'text-winner' },
     { label: 'Défaites', value: s.losses, cls: 'text-loser' },
     { label: '% victoires', value: s.played ? percent(s.win_rate) : '–', variant: 'lime' },
-    { label: 'Buts pour', value: s.goals_for },
+    { label: 'Buts marqués', value: s.goals_scored },
+    { label: 'Buts équipe', value: s.goals_for },
     { label: 'Buts contre', value: s.goals_against },
     { label: 'Différence', value: signed(s.goal_diff) },
     { label: 'Titres', value: s.titles ? `🏆 ${s.titles}` : '0', variant: 'paper' },
@@ -73,7 +74,7 @@ const verdict = computed(() => {
         <p class="text-muted">{{ verdict }}</p>
       </header>
 
-      <dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <dl class="grid grid-cols-3 gap-3">
         <div
           v-for="t in tiles"
           :key="t.label"
@@ -154,6 +155,13 @@ const verdict = computed(() => {
             </p>
           </div>
           <div class="flex shrink-0 items-center gap-2">
+            <span
+              v-if="game.goals_scored !== null"
+              class="rounded-full bg-surface-alt px-2 py-0.5 text-xs font-semibold"
+              title="Buts marqués par le joueur"
+            >
+              {{ game.goals_scored }} ⚽
+            </span>
             <span
               class="rounded px-1.5 py-0.5 text-xs font-bold"
               :class="

@@ -20,7 +20,13 @@ export interface TournamentSummary {
   games_total: number
   games_played: number
   starts_at: string | null
-  champion: { id: number; name: string; players: [string, string] } | null
+  champion: {
+    id: number
+    name: string
+    color: string | null
+    logo_url: string | null
+    players: [string, string]
+  } | null
   created_at: string
 }
 
@@ -32,6 +38,9 @@ export interface PlayerRef {
 export interface Team {
   id: number
   name: string
+  // Couleur de l'écusson (#rrggbb) et logo optionnel (URL relative).
+  color: string | null
+  logo_url: string | null
   pool_id: number | null
   players: [PlayerRef, PlayerRef]
 }
@@ -73,6 +82,13 @@ export interface Game {
   winner_to_slot: Slot | null
   loser_to_game_id: number | null
   loser_to_slot: Slot | null
+  // Buteurs (facultatif) : buts de chaque joueur dans ce match.
+  goals: GameGoal[]
+}
+
+export interface GameGoal {
+  player_id: number
+  goals: number
 }
 
 export interface TournamentDetail extends TournamentSummary {
@@ -93,6 +109,9 @@ export interface PlayerStats {
   titles: number
   fannys_given: number
   fannys_taken: number
+  // Buts marqués par le joueur lui-même (matchs avec buteurs saisis).
+  goals_scored: number
+  games_with_goals: number
 }
 
 export interface PlayerWithStats extends PlayerRef {
@@ -119,6 +138,7 @@ export interface PlayerDetail extends PlayerWithStats {
     opponent_name: string
     score_for: number
     score_against: number
+    goals_scored: number | null
     played_at: string | null
   }[]
 }

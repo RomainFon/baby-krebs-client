@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Game, TournamentDetail } from '@/types'
@@ -33,6 +34,18 @@ const statItems = computed(() => [
     cls: '',
   },
 ])
+// Buts de chaque joueur de l'équipe sur le tournoi (matchs avec buteurs).
+const playerGoals = computed(() => {
+  const totals = new Map<number, number>()
+  const ids = team.value?.players.map((p) => p.id) ?? []
+  for (const game of props.tournament.games) {
+    for (const g of game.goals) {
+      if (ids.includes(g.player_id))
+        totals.set(g.player_id, (totals.get(g.player_id) ?? 0) + g.goals)
+    }
+  }
+  return totals
+})
 const games = computed(() =>
   teamGames(props.tournament, props.teamId).sort((a, b) => a.number - b.number),
 )
@@ -67,20 +80,26 @@ function result(game: Game) {
     </RouterLink>
 
     <section class="card flex flex-col gap-4 p-5">
-      <div>
-        <h2 class="display text-5xl sm:text-6xl">{{ team.name }}</h2>
-        <p class="text-muted">
-          <template v-for="(p, i) in team.players" :key="p.id">
-            <span v-if="i > 0"> & </span>
-            <RouterLink
-              :to="{ name: 'player', params: { playerId: p.id } }"
-              class="hover:text-text hover:underline"
-            >
-              {{ p.name }}
-            </RouterLink>
-          </template>
-        </p>
-        <p class="mt-1 text-sm">{{ status }}</p>
+      <div class="flex flex-wrap items-center gap-5">
+        <TeamBadge :team="team" size="xl" />
+        <div class="min-w-0">
+          <h2 class="display text-5xl sm:text-6xl">{{ team.name }}</h2>
+          <p class="text-muted">
+            <template v-for="(p, i) in team.players" :key="p.id">
+              <span v-if="i > 0"> & </span>
+              <RouterLink
+                :to="{ name: 'player', params: { playerId: p.id } }"
+                class="hover:text-text hover:underline"
+              >
+                {{ p.name }}
+              </RouterLink>
+              <span v-if="playerGoals.has(p.id)" class="text-sm">
+                ({{ playerGoals.get(p.id) }} ⚽)</span
+              >
+            </template>
+          </p>
+          <p class="mt-1 text-sm">{{ status }}</p>
+        </div>
       </div>
       <dl class="grid grid-cols-3 gap-3 text-center sm:grid-cols-6">
         <div v-for="item in statItems" :key="item.label" class="rounded-2xl bg-surface-alt py-3">

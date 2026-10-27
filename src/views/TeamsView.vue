@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { TournamentDetail } from '@/types'
@@ -29,11 +30,14 @@ const teams = computed(() =>
         class="card flex flex-col gap-3 p-4 transition-colors hover:bg-surface-alt"
       >
         <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
-            <h2 class="display truncate text-3xl">{{ team.name }}</h2>
-            <p class="truncate text-sm text-muted">
-              {{ team.players.map((p) => p.name).join(' & ') }}
-            </p>
+          <div class="flex min-w-0 items-center gap-3">
+            <TeamBadge :team="team" size="md" />
+            <div class="min-w-0">
+              <h2 class="display truncate text-3xl">{{ team.name }}</h2>
+              <p class="truncate text-sm text-muted">
+                {{ team.players.map((p) => p.name).join(' & ') }}
+              </p>
+            </div>
           </div>
           <span
             v-if="pool"

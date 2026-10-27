@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TeamBadge from '@/components/TeamBadge.vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { TournamentSummary } from '@/types'
@@ -54,8 +55,9 @@ const progress = computed(() =>
   >
     <div class="min-w-0">
       <p class="display truncate text-2xl">{{ tournament.name }}</p>
-      <p v-if="tournament.champion" class="truncate text-sm text-muted">
-        🏆 <span class="font-semibold text-primary">{{ tournament.champion.name }}</span> ·
+      <p v-if="tournament.champion" class="flex items-center gap-1.5 truncate text-sm text-muted">
+        🏆 <TeamBadge :team="tournament.champion" size="xs" />
+        <span class="font-semibold text-primary">{{ tournament.champion.name }}</span> ·
         {{ tournament.champion.players.join(' & ') }}
       </p>
       <p v-else class="text-sm text-muted">
