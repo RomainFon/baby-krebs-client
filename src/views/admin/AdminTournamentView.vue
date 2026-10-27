@@ -394,39 +394,46 @@ const gameSections = computed(() => {
 
           <ul class="flex flex-col divide-y divide-line">
             <li v-for="team in tournament.teams" :key="team.id" class="py-2">
-              <TeamForm
-                v-if="editingTeamId === team.id"
-                :initial="{
-                  name: team.name,
-                  color: team.color ?? undefined,
-                  players: [team.players[0].id, team.players[1].id],
-                }"
-                submit-label="Enregistrer"
-                :busy="busy"
-                :players="players"
-                :taken="takenPlayers(team.id)"
-                @submit="saveTeam(team, $event)"
-                @cancel="editingTeamId = null"
-              />
-              <div v-else class="flex items-center justify-between gap-3">
-                <!-- Clic sur l'écusson : envoyer / remplacer le logo. -->
-                <label
-                  class="group relative shrink-0 cursor-pointer"
-                  :title="team.logo_url ? 'Changer le logo' : 'Ajouter un logo'"
-                >
-                  <TeamBadge :team="team" size="md" />
-                  <span
-                    class="absolute inset-0 flex items-center justify-center rounded-full bg-black/60 text-[10px] font-semibold opacity-0 transition-opacity group-hover:opacity-100"
+              <!-- Édition : nom, joueurs et logo (la couleur est tirée au
+                   hasard à la création, non modifiable). -->
+              <div v-if="editingTeamId === team.id" class="flex flex-col gap-3">
+                <TeamForm
+                  :initial="{
+                    name: team.name,
+                    players: [team.players[0].id, team.players[1].id],
+                  }"
+                  submit-label="Enregistrer"
+                  :busy="busy"
+                  :players="players"
+                  :taken="takenPlayers(team.id)"
+                  @submit="saveTeam(team, $event)"
+                  @cancel="editingTeamId = null"
+                />
+                <div class="flex flex-wrap items-center gap-3 rounded-2xl bg-surface-alt/60 p-3">
+                  <TeamBadge :team="team" size="lg" />
+                  <label class="btn-ghost cursor-pointer py-1 text-xs">
+                    {{ team.logo_url ? 'Changer le logo' : 'Ajouter un logo' }}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      class="sr-only"
+                      @change="onLogoSelected(team, $event)"
+                    />
+                  </label>
+                  <button
+                    v-if="team.logo_url"
+                    type="button"
+                    class="btn-ghost py-1 text-xs"
+                    :disabled="busy"
+                    @click="removeLogo(team)"
                   >
-                    Logo
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    class="sr-only"
-                    @change="onLogoSelected(team, $event)"
-                  />
-                </label>
+                    Retirer le logo
+                  </button>
+                  <span class="text-xs text-muted">PNG, JPG ou WEBP, 2 Mo max.</span>
+                </div>
+              </div>
+              <div v-else class="flex items-center justify-between gap-3">
+                <TeamBadge :team="team" size="md" />
                 <div class="min-w-0 flex-1">
                   <p class="truncate font-medium">
                     {{ team.name }}
@@ -439,14 +446,6 @@ const gameSections = computed(() => {
                   </p>
                 </div>
                 <div class="flex shrink-0 gap-2">
-                  <button
-                    v-if="team.logo_url"
-                    type="button"
-                    class="btn-ghost py-1 text-xs"
-                    @click="removeLogo(team)"
-                  >
-                    Retirer le logo
-                  </button>
                   <button
                     type="button"
                     class="btn-ghost py-1 text-xs"

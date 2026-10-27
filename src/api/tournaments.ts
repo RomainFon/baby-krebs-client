@@ -57,8 +57,6 @@ export interface TeamPayload {
   name: string
   // Identifiants de joueurs existants.
   players: [number, number]
-  // Couleur de l'écusson ; attribuée automatiquement par l'API si absente.
-  color?: string
 }
 
 export function createTeam(tournamentId: number, payload: TeamPayload): Detail {

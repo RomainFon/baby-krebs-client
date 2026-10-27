@@ -16,10 +16,8 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ submit: [payload: TeamPayload]; cancel: [] }>()
 
-const form = reactive<{ name: string; color: string; one: number | ''; two: number | '' }>({
+const form = reactive<{ name: string; one: number | ''; two: number | '' }>({
   name: props.initial?.name ?? '',
-  // Couleur modifiable en édition ; à la création, l'API en attribue une.
-  color: props.initial?.color ?? '',
   one: props.initial?.players[0] ?? '',
   two: props.initial?.players[1] ?? '',
 })
@@ -36,11 +34,7 @@ const noPlayerLeft = computed(() => optionsFor('').length < 2 && !props.initial)
 
 function handleSubmit() {
   if (form.one === '' || form.two === '') return
-  emit('submit', {
-    name: form.name.trim(),
-    players: [form.one, form.two],
-    ...(form.color ? { color: form.color } : {}),
-  })
+  emit('submit', { name: form.name.trim(), players: [form.one, form.two] })
 }
 
 function reset() {
@@ -55,23 +49,13 @@ defineExpose({ reset })
 <template>
   <form class="flex flex-col gap-1.5" @submit.prevent="handleSubmit">
     <div class="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
-      <div class="flex gap-2">
-        <input
-          v-if="initial"
-          v-model="form.color"
-          type="color"
-          class="h-11 w-12 shrink-0 cursor-pointer rounded-xl border border-line bg-input p-1"
-          title="Couleur de l'écusson"
-          aria-label="Couleur de l'écusson"
-        />
-        <input
-          v-model="form.name"
-          required
-          maxlength="50"
-          placeholder="Nom de l'équipe"
-          class="field"
-        />
-      </div>
+      <input
+        v-model="form.name"
+        required
+        maxlength="50"
+        placeholder="Nom de l'équipe"
+        class="field"
+      />
       <select v-model="form.one" required class="field" aria-label="Joueur 1">
         <option value="" disabled>Joueur 1</option>
         <option v-for="p in optionsOne" :key="p.id" :value="p.id">{{ p.name }}</option>
