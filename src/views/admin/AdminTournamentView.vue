@@ -217,8 +217,8 @@ const gameFilter = ref<'todo' | 'all'>('todo')
 const STAGE_ORDER: Stage[] = ['group', 'winner', 'loser', 'final']
 const STAGE_TITLES: Record<Stage, string> = {
   group: 'Poules',
-  winner: 'Winner bracket',
-  loser: 'Loser bracket',
+  winner: 'Ligue des champions',
+  loser: 'Ligue des espoirs',
   final: 'Grande finale',
 }
 
@@ -394,13 +394,14 @@ const gameSections = computed(() => {
 
           <ul class="flex flex-col divide-y divide-line">
             <li v-for="team in tournament.teams" :key="team.id" class="py-2">
-              <!-- Édition : nom, joueurs et logo (la couleur est tirée au
-                   hasard à la création, non modifiable). -->
+              <!-- Édition : nom, joueurs, couleur et logo (la couleur est
+                   tirée au hasard à la création). -->
               <div v-if="editingTeamId === team.id" class="flex flex-col gap-3">
                 <TeamForm
                   :initial="{
                     name: team.name,
                     players: [team.players[0].id, team.players[1].id],
+                    color: team.color ?? '#444444',
                   }"
                   submit-label="Enregistrer"
                   :busy="busy"
@@ -490,8 +491,8 @@ const gameSections = computed(() => {
             </div>
           </div>
           <p class="text-xs text-muted">
-            Le gagnant (et le perdant, en winner bracket) avance automatiquement. Un score ne peut
-            être corrigé que tant que le match suivant n'a pas été joué.
+            Le gagnant (et le perdant, en Ligue des champions) avance automatiquement. Un score ne
+            peut être corrigé que tant que le match suivant n'a pas été joué.
           </p>
           <p v-if="gameSections.length === 0" class="text-sm text-muted">
             Tous les matchs ont été joués 🎉

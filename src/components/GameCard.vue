@@ -8,6 +8,7 @@ import {
   slotLabel,
   STAGE_ACCENT,
   teamById,
+  teamTint,
   winnerSlot,
 } from '@/lib/tournament'
 
@@ -25,6 +26,10 @@ const involved = computed(
     props.highlightTeamId != null &&
     (props.game.team_a_id === props.highlightTeamId ||
       props.game.team_b_id === props.highlightTeamId),
+)
+// Couleur de l'équipe suivie : contour du match et fond de sa ligne.
+const highlightColor = computed(
+  () => teamById(props.tournament, props.highlightTeamId ?? null)?.color ?? null,
 )
 const dimmed = computed(() => props.highlightTeamId != null && !involved.value)
 const destination = computed(() =>
@@ -59,7 +64,8 @@ const rows = computed(() =>
     </div>
     <div
       class="relative overflow-hidden rounded-2xl bg-surface transition-colors group-hover:bg-surface-alt"
-      :class="involved ? 'ring-2 ring-primary' : game.stage === 'final' && 'ring-1 ring-primary/40'"
+      :class="!involved && game.stage === 'final' && 'ring-1 ring-primary/40'"
+      :style="involved ? { boxShadow: `0 0 0 2px ${highlightColor}` } : undefined"
     >
       <span
         class="absolute inset-y-3 left-0 w-1 rounded-r-full"
@@ -72,8 +78,12 @@ const rows = computed(() =>
         :class="[
           winner === row.slot ? 'font-semibold text-text' : winner ? 'text-muted' : '',
           row.teamId === null ? 'text-muted italic' : '',
-          highlightTeamId != null && row.teamId === highlightTeamId ? 'bg-primary/10' : '',
         ]"
+        :style="
+          highlightTeamId != null && row.teamId === highlightTeamId
+            ? { background: teamTint(highlightColor, 0.22) }
+            : undefined
+        "
       >
         <span class="flex min-w-0 items-center gap-2">
           <TeamBadge :team="row.team" size="xs" />

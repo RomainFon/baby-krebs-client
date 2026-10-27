@@ -4,7 +4,7 @@
    casser (blocs de contraste), gros titres condensés en majuscules.
    Tokens exposés à Tailwind (bg-surface, text-muted, border-line...) et en
    variables CSS (--color-*) pour les styles calculés.
-   Phases : winner bracket = lime, loser bracket = blanc, finale = lime. */
+   Phases : Ligue des champions (winner) = lime, Ligue des espoirs (loser) = blanc, finale = lime. */
 @theme {
   --color-background: #0a0a0a;
   --color-surface: #161616;

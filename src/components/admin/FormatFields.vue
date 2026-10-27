@@ -40,7 +40,7 @@ const summary = computed(() =>
         />
       </label>
       <label class="text-sm">
-        <span class="mb-1 block text-muted">→ Winner / poule</span>
+        <span class="mb-1 block text-muted">→ Champions / poule</span>
         <input
           v-model.number="model.wb_per_group"
           type="number"
@@ -51,7 +51,7 @@ const summary = computed(() =>
         />
       </label>
       <label class="text-sm">
-        <span class="mb-1 block text-muted">→ Loser / poule</span>
+        <span class="mb-1 block text-muted">→ Espoirs / poule</span>
         <input
           v-model.number="model.lb_per_group"
           type="number"
@@ -74,16 +74,16 @@ const summary = computed(() =>
       </label>
     </div>
     <p class="text-xs text-muted">
-      Dans chaque poule, les {{ model.wb_per_group }} premiers vont en winner bracket<template
+      Dans chaque poule, les {{ model.wb_per_group }} premiers vont en Ligue des champions<template
         v-if="model.lb_per_group"
-        >, les {{ model.lb_per_group }} suivants en loser bracket</template
+        >, les {{ model.lb_per_group }} suivants en Ligue des espoirs</template
       >, les autres sont éliminés.
     </p>
     <p v-if="summary" class="text-xs" :class="summary.error ? 'text-danger' : 'text-muted'">
       <template v-if="summary.error">{{ summary.error }}</template>
       <template v-else>
-        Avec {{ teamCount }} équipes : {{ summary.wbTeams }} en winner bracket,
-        {{ summary.lbTeams }} en loser bracket, {{ summary.eliminated }} éliminée(s) en poule.
+        Avec {{ teamCount }} équipes : {{ summary.wbTeams }} en Ligue des champions,
+        {{ summary.lbTeams }} en Ligue des espoirs, {{ summary.eliminated }} éliminée(s) en poule.
       </template>
     </p>
   </div>

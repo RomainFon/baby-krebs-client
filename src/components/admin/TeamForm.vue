@@ -16,10 +16,11 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ submit: [payload: TeamPayload]; cancel: [] }>()
 
-const form = reactive<{ name: string; one: number | ''; two: number | '' }>({
+const form = reactive<{ name: string; one: number | ''; two: number | ''; color: string }>({
   name: props.initial?.name ?? '',
   one: props.initial?.players[0] ?? '',
   two: props.initial?.players[1] ?? '',
+  color: props.initial?.color ?? '',
 })
 
 // Choix d'un sélecteur : joueurs libres, par ordre alphabétique, sans celui
@@ -34,7 +35,11 @@ const noPlayerLeft = computed(() => optionsFor('').length < 2 && !props.initial)
 
 function handleSubmit() {
   if (form.one === '' || form.two === '') return
-  emit('submit', { name: form.name.trim(), players: [form.one, form.two] })
+  emit('submit', {
+    name: form.name.trim(),
+    players: [form.one, form.two],
+    ...(form.color ? { color: form.color } : {}),
+  })
 }
 
 function reset() {
@@ -77,6 +82,23 @@ defineExpose({ reset })
         </button>
       </div>
     </div>
+    <!-- Couleur : seulement en modification (tirée au hasard à la création).
+         Le sélecteur natif ouvre la roue chromatique du système. -->
+    <label v-if="initial?.color" class="flex w-fit cursor-pointer items-center gap-3 text-sm">
+      <span
+        class="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-line"
+        :style="{ background: form.color }"
+      >
+        <input
+          v-model="form.color"
+          type="color"
+          class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          aria-label="Couleur de l'équipe"
+        />
+      </span>
+      <span class="text-muted">Couleur de l'équipe</span>
+      <span class="font-mono text-xs text-muted uppercase">{{ form.color }}</span>
+    </label>
     <p v-if="noPlayerLeft" class="text-xs text-muted">
       Plus assez de joueurs disponibles : crée-en de nouveaux pour inscrire une équipe.
     </p>

@@ -9,7 +9,7 @@ import StatTile from '@/components/StatTile.vue'
 import TournamentCard from '@/components/TournamentCard.vue'
 import MatchupCard from '@/components/MatchupCard.vue'
 import GameModal from '@/components/GameModal.vue'
-import PageTitle from '@/components/ui/PageTitle.vue'
+import BrandName from '@/components/ui/BrandName.vue'
 
 const store = useTournamentStore()
 const stats = ref<GlobalStats | null>(null)
@@ -113,7 +113,10 @@ const funTiles = computed(() => {
 
 <template>
   <main class="mx-auto flex w-full max-w-6xl flex-col gap-12 px-4 py-6 sm:py-10">
-    <PageTitle kicker="Bienvenue sur" title="Baby Krebs" />
+    <header>
+      <p class="kicker">Bienvenue sur</p>
+      <h1 class="display text-6xl break-words sm:text-8xl"><BrandName /></h1>
+    </header>
 
     <p v-if="isLoading" class="text-sm text-muted">Chargement…</p>
 

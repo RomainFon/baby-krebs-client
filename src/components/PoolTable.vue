@@ -2,7 +2,7 @@
 import TeamBadge from '@/components/TeamBadge.vue'
 import { computed, ref } from 'vue'
 import type { Game, Pool, TournamentDetail } from '@/types'
-import { teamById } from '@/lib/tournament'
+import { teamById, teamTint } from '@/lib/tournament'
 import GameCard from '@/components/GameCard.vue'
 
 const props = defineProps<{
@@ -44,10 +44,12 @@ function signed(n: number): string {
         v-for="row in pool.standings"
         :key="row.team_id"
         class="mx-2 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-opacity"
-        :class="[
-          highlightTeamId != null && row.team_id !== highlightTeamId ? 'opacity-30' : '',
-          highlightTeamId === row.team_id ? 'bg-primary/10' : '',
-        ]"
+        :class="[highlightTeamId != null && row.team_id !== highlightTeamId ? 'opacity-30' : '']"
+        :style="
+          highlightTeamId === row.team_id
+            ? { background: teamTint(teamById(tournament, row.team_id)?.color, 0.22) }
+            : undefined
+        "
       >
         <span class="h-5 w-1 rounded-full" :class="QUALIF_BAR[qualification(row.rank)]" />
         <span class="w-4 text-muted tabular-nums">{{ row.rank }}</span>

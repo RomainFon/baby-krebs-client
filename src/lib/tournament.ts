@@ -9,9 +9,23 @@ export const STATUS_LABELS: Record<TournamentStatus, string> = {
 
 export const STAGE_LABELS: Record<Stage, string> = {
   group: 'Poule',
-  winner: 'Winner bracket',
-  loser: 'Loser bracket',
+  winner: 'Ligue des champions',
+  loser: 'Ligue des espoirs',
   final: 'Grande finale',
+}
+
+/** Texte noir ou blanc lisible sur une couleur d'équipe (#rrggbb). */
+export function contrastText(hex: string | null | undefined): string {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt((hex ?? '#444444').slice(i, i + 2), 16))
+  return 0.299 * r! + 0.587 * g! + 0.114 * b! > 160 ? '#0a0a0a' : '#ffffff'
+}
+
+/** Couleur d'équipe avec transparence (alpha 0–1), pour les surbrillances. */
+export function teamTint(hex: string | null | undefined, alpha: number): string {
+  const a = Math.round(alpha * 255)
+    .toString(16)
+    .padStart(2, '0')
+  return `${hex ?? '#444444'}${a}`
 }
 
 export function teamById(tournament: TournamentDetail, id: number | null): Team | undefined {
@@ -61,23 +75,23 @@ export function slotLabel(tournament: TournamentDetail, game: Game, slot: Slot):
   return team?.name ?? placeholderLabel(tournament, game, slot)
 }
 
-/** Nom d'un tour : "Demi-finales", "Finale LB", "LB tour 2"... */
+/** Nom d'un tour : "Demi-finales Champions", "Finale Espoirs", "Espoirs · tour 2"... */
 export function roundLabel(stage: Stage, round: number, maxRound: number): string {
   if (stage === 'final') return 'Grande finale'
   if (stage === 'group') return `Journée ${round}`
   const fromEnd = maxRound - round
   if (stage === 'winner') {
-    if (fromEnd === 0) return 'Finale WB'
-    if (fromEnd === 1) return 'Demi-finales WB'
-    if (fromEnd === 2) return 'Quarts WB'
-    return `WB tour ${round}`
+    if (fromEnd === 0) return 'Finale Champions'
+    if (fromEnd === 1) return 'Demi-finales Champions'
+    if (fromEnd === 2) return 'Quarts Champions'
+    return `Champions · tour ${round}`
   }
-  if (fromEnd === 0) return 'Finale LB'
-  if (fromEnd === 1) return 'Demi-finale LB'
-  return `LB tour ${round}`
+  if (fromEnd === 0) return 'Finale Espoirs'
+  if (fromEnd === 1) return 'Demi-finale Espoirs'
+  return `Espoirs · tour ${round}`
 }
 
-/** Où va le perdant d'un match du winner bracket ("↘ Perdant → LB tour 2"). */
+/** Où va le perdant d'un match de la Ligue des champions ("↘ Perdant → Espoirs · tour 2"). */
 export function loserDestination(tournament: TournamentDetail, game: Game): string | null {
   if (!game.loser_to_game_id) return null
   const target = tournament.games.find((g) => g.id === game.loser_to_game_id)
@@ -180,7 +194,7 @@ export function formatSummary(teamCount: number, groups: number, wb: number, lb:
   const lbTeams = groups * lb
   const eliminated = Math.max(0, teamCount - wbTeams - lbTeams)
   let error: string | null = null
-  if (wbTeams < 2) error = 'Il faut au moins 2 équipes qualifiées en winner bracket.'
+  if (wbTeams < 2) error = 'Il faut au moins 2 équipes qualifiées en Ligue des champions.'
   else if (teamCount < groups * 2)
     error = `Il faut au moins ${groups * 2} équipes pour ${groups} poules.`
   else if (Math.floor(teamCount / groups) < wb + lb)

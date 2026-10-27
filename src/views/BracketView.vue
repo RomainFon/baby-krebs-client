@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Game, TournamentDetail } from '@/types'
-import { isPlayed, slotLabel, formatDate } from '@/lib/tournament'
+import { contrastText, isPlayed, slotLabel, formatDate } from '@/lib/tournament'
 import PoolTable from '@/components/PoolTable.vue'
 import BracketRow from '@/components/BracketRow.vue'
 import GameModal from '@/components/GameModal.vue'
@@ -37,9 +37,13 @@ const upcoming = computed(() =>
 
 const qualifSummary = computed(() => {
   const t = props.tournament
-  const parts = [`${t.wb_per_group === 1 ? '1er' : `${t.wb_per_group} premiers`} → winner bracket`]
+  const parts = [
+    `${t.wb_per_group === 1 ? '1er' : `${t.wb_per_group} premiers`} → Ligue des champions`,
+  ]
   if (t.lb_per_group > 0)
-    parts.push(`${t.lb_per_group === 1 ? 'suivant' : `${t.lb_per_group} suivants`} → loser bracket`)
+    parts.push(
+      `${t.lb_per_group === 1 ? 'suivant' : `${t.lb_per_group} suivants`} → Ligue des espoirs`,
+    )
   return `Matchs en ${t.target_score} points · ${parts.join(' · ')}`
 })
 </script>
@@ -90,14 +94,26 @@ const qualifSummary = computed(() => {
         >
           Toutes
         </button>
+        <!-- Chaque équipe dans sa couleur : pastille, puis pilule pleine une
+             fois suivie (ses matchs sont alors cerclés de la même couleur). -->
         <button
           v-for="team in tournament.teams"
           :key="team.id"
           type="button"
           class="pill"
-          :class="highlightTeamId === team.id && 'pill-active'"
+          :class="highlightTeamId === team.id && 'font-semibold'"
+          :style="
+            highlightTeamId === team.id
+              ? { background: team.color ?? undefined, color: contrastText(team.color) }
+              : undefined
+          "
           @click="highlightTeamId = highlightTeamId === team.id ? null : team.id"
         >
+          <span
+            v-if="highlightTeamId !== team.id"
+            class="h-2.5 w-2.5 rounded-full"
+            :style="{ background: team.color ?? undefined }"
+          />
           {{ team.name }}
         </button>
       </div>
@@ -117,16 +133,16 @@ const qualifSummary = computed(() => {
         <p class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
           <span>{{ qualifSummary }}</span>
           <span class="flex items-center gap-1.5"
-            ><span class="h-3 w-1 rounded-full bg-winner" /> Winner bracket</span
+            ><span class="h-3 w-1 rounded-full bg-winner" /> Ligue des champions</span
           >
           <span v-if="tournament.lb_per_group" class="flex items-center gap-1.5">
-            <span class="h-3 w-1 rounded-full bg-loser" /> Loser bracket
+            <span class="h-3 w-1 rounded-full bg-loser" /> Ligue des espoirs
           </span>
         </p>
       </section>
 
       <section class="flex flex-col gap-3">
-        <h2 class="section-title text-winner">Winner bracket</h2>
+        <h2 class="section-title text-winner">Ligue des champions</h2>
         <BracketRow
           :tournament="tournament"
           stage="winner"
@@ -137,7 +153,7 @@ const qualifSummary = computed(() => {
       </section>
 
       <section v-if="hasLoserBracket" class="flex flex-col gap-3">
-        <h2 class="section-title text-loser">Loser bracket</h2>
+        <h2 class="section-title text-loser">Ligue des espoirs</h2>
         <BracketRow
           :tournament="tournament"
           stage="loser"
@@ -145,8 +161,8 @@ const qualifSummary = computed(() => {
           @open="open"
         />
         <p class="text-xs text-muted">
-          Le vainqueur du loser bracket rejoint la grande finale · ↘ descente dans le loser bracket
-          · en gras : vainqueur du match
+          Le vainqueur de la Ligue des espoirs rejoint la grande finale · ↘ descente en Ligue des
+          espoirs · en gras : vainqueur du match
         </p>
       </section>
     </template>

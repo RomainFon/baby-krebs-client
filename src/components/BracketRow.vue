@@ -4,7 +4,7 @@ import type { Game, Stage, TournamentDetail } from '@/types'
 import { roundLabel } from '@/lib/tournament'
 import GameCard from '@/components/GameCard.vue'
 
-// Une ligne de l'arbre (winner ou loser bracket) : une colonne par tour,
+// Une ligne de l'arbre (Ligue des champions ou des espoirs) : une colonne par tour,
 // matchs répartis verticalement (justify-around) pour dessiner l'entonnoir.
 // La grande finale peut être ajoutée en dernière colonne.
 const props = defineProps<{

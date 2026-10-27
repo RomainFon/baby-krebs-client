@@ -57,6 +57,8 @@ export interface TeamPayload {
   name: string
   // Identifiants de joueurs existants.
   players: [number, number]
+  // #rrggbb, seulement en modification (tirée au hasard à la création).
+  color?: string
 }
 
 export function createTeam(tournamentId: number, payload: TeamPayload): Detail {

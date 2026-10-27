@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { contrastText } from '@/lib/tournament'
 
 // Écusson d'une équipe, façon blason de club : logo s'il existe, sinon
 // initiales sur la couleur de l'équipe. Sans équipe (case encore vide de
@@ -28,11 +29,7 @@ const initials = computed(() => {
 })
 
 // Texte noir ou blanc selon la luminosité de la couleur de fond.
-const textColor = computed(() => {
-  const hex = props.team?.color ?? '#444444'
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-  return 0.299 * r! + 0.587 * g! + 0.114 * b! > 160 ? '#0a0a0a' : '#ffffff'
-})
+const textColor = computed(() => contrastText(props.team?.color))
 </script>
 
 <template>

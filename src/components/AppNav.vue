@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import BrandName from '@/components/ui/BrandName.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,7 +50,7 @@ async function handleLogout() {
     <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:gap-8">
       <RouterLink :to="{ name: 'home' }" class="flex shrink-0 items-center gap-2.5">
         <img src="/favicon.svg" alt="" class="h-10 w-10" />
-        <span class="font-display text-xl tracking-wide uppercase">Baby Krebs</span>
+        <BrandName class="font-display text-xl tracking-wide uppercase" />
       </RouterLink>
 
       <!-- Desktop : onglets en pilules dans l'en-tête. -->
