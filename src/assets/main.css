@@ -103,3 +103,115 @@ body {
 @utility live-badge {
   @apply inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-text;
 }
+
+/* Règlement rendu depuis le Markdown (RulesView) : pas de plugin typography,
+   juste ce qu'il faut pour des titres, listes et paragraphes aérés. */
+.rules {
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--color-text) 88%, transparent);
+
+  & > :first-child {
+    margin-top: 0;
+  }
+  & h1,
+  & h2,
+  & h3 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1.05;
+    color: var(--color-text);
+    margin: 2.25rem 0 0.9rem;
+  }
+  & h1 {
+    font-size: 2.25rem;
+  }
+  & h2 {
+    font-size: 1.85rem;
+  }
+  & h2::after {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 4px;
+    margin-top: 0.6rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+  }
+  & h3 {
+    font-size: 1.35rem;
+  }
+  & p {
+    margin: 0.75rem 0;
+  }
+  & strong {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  & em {
+    color: var(--color-muted);
+  }
+  & a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  & hr {
+    border-color: var(--color-line);
+    margin: 2rem 0;
+  }
+  & ul,
+  & ol {
+    margin: 0.75rem 0;
+    padding-left: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  & ul {
+    list-style: none;
+  }
+  & ul > li {
+    position: relative;
+  }
+  & ul > li::before {
+    content: '';
+    position: absolute;
+    left: -1.1rem;
+    top: 0.68em;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+  }
+  & ol {
+    list-style: none;
+    counter-reset: rules-step;
+    padding-left: 2.4rem;
+  }
+  & ol > li {
+    position: relative;
+    counter-increment: rules-step;
+  }
+  /* Étapes numérotées : pastille ronde lime. */
+  & ol > li::before {
+    content: counter(rules-step);
+    position: absolute;
+    left: -2.4rem;
+    top: 0.1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+    color: var(--color-primary-text);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  & li > ul,
+  & li > ol {
+    margin: 0.4rem 0 0.2rem;
+  }
+}

@@ -345,12 +345,12 @@ const gameSections = computed(() => {
             rows="12"
             maxlength="20000"
             class="field font-mono text-sm leading-relaxed"
-            placeholder="# Déroulement&#10;- Matchs en 10 points&#10;- Pas de roulette&#10;&#10;Texte libre…"
+            placeholder="## Déroulement&#10;1. Phase de poules&#10;2. Phase finale&#10;&#10;- Pas de **roulette**&#10;&#10;*Texte libre…*"
             @input="rulesSaved = false"
           />
           <p class="text-xs text-muted">
-            Mise en forme : « # » en début de ligne pour un titre, « - » pour une liste, une ligne
-            vide entre deux paragraphes.
+            Mise en forme Markdown : « ## » pour un titre, « 1. » ou « - » pour une liste (indenter
+            pour une sous-liste), **gras**, *italique*, une ligne vide entre deux paragraphes.
           </p>
           <div class="flex items-center gap-3">
             <button type="submit" class="btn-primary" :disabled="busy">Enregistrer</button>
