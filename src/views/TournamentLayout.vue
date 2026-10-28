@@ -39,6 +39,7 @@ const subTabs = computed(() => [
   { label: 'Tableau', name: 'bracket', active: route.name === 'bracket' },
   { label: 'Matchs', name: 'games', active: route.name === 'games' },
   { label: 'Équipes', name: 'teams', active: route.name === 'teams' || route.name === 'team' },
+  { label: 'Règlement', name: 'rules', active: route.name === 'rules' },
 ])
 </script>
 

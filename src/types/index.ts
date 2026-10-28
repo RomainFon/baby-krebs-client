@@ -23,6 +23,7 @@ export interface TournamentSummary {
   champion: {
     id: number
     name: string
+    short_name: string
     color: string | null
     logo_url: string | null
     players: [string, string]
@@ -38,6 +39,8 @@ export interface PlayerRef {
 export interface Team {
   id: number
   name: string
+  // Diminutif saisi, sinon initiales calculées par l'API ("CQP").
+  short_name: string
   // Couleur de l'écusson (#rrggbb) et logo optionnel (URL relative).
   color: string | null
   logo_url: string | null
@@ -92,6 +95,8 @@ export interface GameGoal {
 }
 
 export interface TournamentDetail extends TournamentSummary {
+  // Règlement en texte libre (titres "# ", listes "- ").
+  rules: string | null
   teams: Team[]
   pools: Pool[]
   games: Game[]

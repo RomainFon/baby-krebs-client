@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TeamBadge from '@/components/TeamBadge.vue'
+import TeamTag from '@/components/TeamTag.vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { TournamentDetail } from '@/types'
@@ -39,12 +40,12 @@ const teams = computed(() =>
               </p>
             </div>
           </div>
-          <span
-            v-if="pool"
-            class="shrink-0 rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-muted"
-          >
-            Poule {{ pool }}
-          </span>
+          <div class="flex shrink-0 flex-col items-end gap-1.5">
+            <TeamTag :team="team" />
+            <span v-if="pool" class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs text-muted">
+              Poule {{ pool }}
+            </span>
+          </div>
         </div>
         <dl class="grid grid-cols-4 gap-2 text-center">
           <div>

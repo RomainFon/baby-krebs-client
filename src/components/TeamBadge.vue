@@ -3,10 +3,15 @@ import { computed } from 'vue'
 import { contrastText } from '@/lib/tournament'
 
 // Écusson d'une équipe, façon blason de club : logo s'il existe, sinon
-// initiales sur la couleur de l'équipe. Sans équipe (case encore vide de
+// diminutif (3 lettres max) sur la couleur de l'équipe. Sans équipe (case encore vide de
 // l'arbre), un rond en pointillés.
 const props = defineProps<{
-  team?: { name: string; color: string | null; logo_url: string | null } | null
+  team?: {
+    name: string
+    short_name?: string
+    color: string | null
+    logo_url: string | null
+  } | null
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }>()
 
@@ -19,6 +24,7 @@ const SIZES = {
 }
 
 const initials = computed(() => {
+  if (props.team?.short_name) return props.team.short_name.slice(0, 3)
   const words = (props.team?.name ?? '')
     .replace(/^(les|le|la|l')\s*/i, '')
     .split(/[\s-]+/)

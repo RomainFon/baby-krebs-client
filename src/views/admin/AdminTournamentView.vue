@@ -76,7 +76,11 @@ const settings = reactive({
   format: { group_count: 2, wb_per_group: 2, lb_per_group: 2, target_score: 10 },
 })
 
+const rules = ref('')
+const rulesSaved = ref(false)
+
 function syncSettings(t: TournamentDetail) {
+  rules.value = t.rules ?? ''
   settings.name = t.name
   settings.format = {
     group_count: t.group_count,
@@ -121,6 +125,20 @@ async function saveSettings() {
     : { name: settings.name }
   if (await run(() => updateTournament(props.tournamentId, payload), "Impossible d'enregistrer.")) {
     syncSettings(tournament.value!)
+  }
+}
+
+async function saveRules() {
+  rulesSaved.value = false
+  const text = rules.value.trim()
+  if (
+    await run(
+      () => updateTournament(props.tournamentId, { rules: text || null }),
+      "Impossible d'enregistrer le règlement.",
+    )
+  ) {
+    syncSettings(tournament.value!)
+    rulesSaved.value = true
   }
 }
 
@@ -311,6 +329,35 @@ const gameSections = computed(() => {
           </div>
         </form>
 
+        <!-- Règlement : affiché dans l'onglet public « Règlement ». -->
+        <form class="card flex flex-col gap-3 p-6" @submit.prevent="saveRules">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 class="section-title">Règlement</h2>
+            <RouterLink
+              :to="{ name: 'rules', params: { tournamentId: tournament.id } }"
+              class="text-xs text-muted hover:text-text"
+            >
+              Voir la page publique →
+            </RouterLink>
+          </div>
+          <textarea
+            v-model="rules"
+            rows="12"
+            maxlength="20000"
+            class="field font-mono text-sm leading-relaxed"
+            placeholder="# Déroulement&#10;- Matchs en 10 points&#10;- Pas de roulette&#10;&#10;Texte libre…"
+            @input="rulesSaved = false"
+          />
+          <p class="text-xs text-muted">
+            Mise en forme : « # » en début de ligne pour un titre, « - » pour une liste, une ligne
+            vide entre deux paragraphes.
+          </p>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="btn-primary" :disabled="busy">Enregistrer</button>
+            <span v-if="rulesSaved" class="text-sm text-primary">Enregistré ✓</span>
+          </div>
+        </form>
+
         <section class="card flex flex-col gap-3 p-6 ring-1 ring-danger/30">
           <h2 class="section-title text-danger">Zone de danger</h2>
           <div>
@@ -402,6 +449,7 @@ const gameSections = computed(() => {
                     name: team.name,
                     players: [team.players[0].id, team.players[1].id],
                     color: team.color ?? '#444444',
+                    short_name: team.short_name,
                   }"
                   submit-label="Enregistrer"
                   :busy="busy"

@@ -16,11 +16,18 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ submit: [payload: TeamPayload]; cancel: [] }>()
 
-const form = reactive<{ name: string; one: number | ''; two: number | ''; color: string }>({
+const form = reactive<{
+  name: string
+  one: number | ''
+  two: number | ''
+  color: string
+  shortName: string
+}>({
   name: props.initial?.name ?? '',
   one: props.initial?.players[0] ?? '',
   two: props.initial?.players[1] ?? '',
   color: props.initial?.color ?? '',
+  shortName: props.initial?.short_name ?? '',
 })
 
 // Choix d'un sélecteur : joueurs libres, par ordre alphabétique, sans celui
@@ -39,6 +46,11 @@ function handleSubmit() {
     name: form.name.trim(),
     players: [form.one, form.two],
     ...(form.color ? { color: form.color } : {}),
+    // Envoyé seulement s'il a changé : sinon les initiales restent calculées
+    // (et suivent un renommage de l'équipe).
+    ...(props.initial && form.shortName.trim() !== props.initial.short_name
+      ? { short_name: form.shortName.trim() }
+      : {}),
   })
 }
 
@@ -82,23 +94,37 @@ defineExpose({ reset })
         </button>
       </div>
     </div>
-    <!-- Couleur : seulement en modification (tirée au hasard à la création).
-         Le sélecteur natif ouvre la roue chromatique du système. -->
-    <label v-if="initial?.color" class="flex w-fit cursor-pointer items-center gap-3 text-sm">
-      <span
-        class="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-line"
-        :style="{ background: form.color }"
-      >
+    <!-- Couleur et diminutif : seulement en modification (couleur tirée au
+         hasard et initiales calculées à la création). Le sélecteur natif
+         ouvre la roue chromatique du système. -->
+    <div v-if="initial" class="flex flex-wrap items-center gap-x-6 gap-y-2">
+      <label class="flex items-center gap-2 text-sm">
+        <span class="text-muted">Diminutif</span>
         <input
-          v-model="form.color"
-          type="color"
-          class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          aria-label="Couleur de l'équipe"
+          v-model="form.shortName"
+          maxlength="5"
+          pattern="[\p{L}\p{N}]*"
+          title="Lettres et chiffres uniquement, 5 max"
+          placeholder="Initiales"
+          class="field w-24 py-1.5 font-semibold uppercase"
         />
-      </span>
-      <span class="text-muted">Couleur de l'équipe</span>
-      <span class="font-mono text-xs text-muted uppercase">{{ form.color }}</span>
-    </label>
+      </label>
+      <label v-if="initial.color" class="flex w-fit cursor-pointer items-center gap-3 text-sm">
+        <span
+          class="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-line"
+          :style="{ background: form.color }"
+        >
+          <input
+            v-model="form.color"
+            type="color"
+            class="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            aria-label="Couleur de l'équipe"
+          />
+        </span>
+        <span class="text-muted">Couleur de l'équipe</span>
+        <span class="font-mono text-xs text-muted uppercase">{{ form.color }}</span>
+      </label>
+    </div>
     <p v-if="noPlayerLeft" class="text-xs text-muted">
       Plus assez de joueurs disponibles : crée-en de nouveaux pour inscrire une équipe.
     </p>

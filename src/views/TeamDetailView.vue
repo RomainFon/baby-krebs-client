@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TeamBadge from '@/components/TeamBadge.vue'
+import TeamTag from '@/components/TeamTag.vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Game, TournamentDetail } from '@/types'
@@ -84,6 +85,7 @@ function result(game: Game) {
         <TeamBadge :team="team" size="xl" />
         <div class="min-w-0">
           <h2 class="display text-5xl sm:text-6xl">{{ team.name }}</h2>
+          <TeamTag :team="team" class="my-1.5" />
           <p class="text-muted">
             <template v-for="(p, i) in team.players" :key="p.id">
               <span v-if="i > 0"> & </span>

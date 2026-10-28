@@ -30,6 +30,7 @@ export interface TournamentPayload {
   wb_per_group: number
   lb_per_group: number
   target_score: number
+  rules: string | null
 }
 
 // Le nom suffit : le format prend ses valeurs par défaut côté API.
@@ -59,6 +60,8 @@ export interface TeamPayload {
   players: [number, number]
   // #rrggbb, seulement en modification (tirée au hasard à la création).
   color?: string
+  // Vide = initiales calculées par l'API.
+  short_name?: string
 }
 
 export function createTeam(tournamentId: number, payload: TeamPayload): Detail {
