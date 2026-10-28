@@ -1,6 +1,6 @@
 # Déploiement — baby-krebs-client
 
-Domaine : **https://baby-krebs.fontaine-romain.fr**. Ce service sert le SPA et
+Domaine : **https://baby-footenor.tenorsolutions.com**. Ce service sert le SPA et
 tout le trafic du domaine, sauf `/api` et `/sanctum` (routés vers
 baby-krebs-api).
 
@@ -26,7 +26,7 @@ les labels Traefik.
 docker compose -f docker-compose.prod.yml --env-file .env.prod logs client
 ```
 
-Ouvrir https://baby-krebs.fontaine-romain.fr : l'accueil doit s'afficher. Le
+Ouvrir https://baby-footenor.tenorsolutions.com : l'accueil doit s'afficher. Le
 premier certificat Let's Encrypt peut prendre quelques secondes.
 
 ## Mise à jour
