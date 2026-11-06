@@ -20,6 +20,10 @@ function open(game: Game) {
   openedGameId.value = game.id
 }
 
+const sortedTeams = computed(() =>
+  [...props.tournament.teams].sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+)
+
 const hasDraw = computed(() => props.tournament.games.length > 0)
 const hasLoserBracket = computed(() => props.tournament.games.some((g) => g.stage === 'loser'))
 
@@ -81,42 +85,46 @@ const qualifSummary = computed(() => {
         </div>
       </section>
 
-      <div
-        class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
-        role="group"
-        aria-label="Suivre une équipe"
-      >
-        <button
-          type="button"
-          class="pill"
-          :class="highlightTeamId === null && 'pill-active'"
-          @click="highlightTeamId = null"
-        >
-          Toutes
-        </button>
-        <!-- Chaque équipe dans sa couleur : pastille, puis pilule pleine une
-             fois suivie (ses matchs sont alors cerclés de la même couleur). -->
-        <button
-          v-for="team in tournament.teams"
-          :key="team.id"
-          type="button"
-          class="pill"
-          :class="highlightTeamId === team.id && 'font-semibold'"
-          :style="
-            highlightTeamId === team.id
-              ? { background: team.color ?? undefined, color: contrastText(team.color) }
-              : undefined
-          "
-          @click="highlightTeamId = highlightTeamId === team.id ? null : team.id"
-        >
-          <span
-            v-if="highlightTeamId !== team.id"
-            class="h-2.5 w-2.5 rounded-full"
-            :style="{ background: team.color ?? undefined }"
-          />
-          {{ team.name }}
-        </button>
-      </div>
+      <section class="flex flex-col gap-3" aria-label="Suivre une équipe">
+        <div class="flex items-baseline justify-between gap-3">
+          <h2 class="section-title">Suivre une équipe</h2>
+          <button
+            v-if="highlightTeamId !== null"
+            type="button"
+            class="cursor-pointer text-xs text-muted hover:text-text"
+            @click="highlightTeamId = null"
+          >
+            Tout afficher ✕
+          </button>
+        </div>
+        <!-- Pilules compactes sur plusieurs lignes (pas de défilement
+             horizontal) ; chaque équipe dans sa couleur : pastille, puis
+             pilule pleine une fois suivie (ses matchs sont alors cerclés de la
+             même couleur). -->
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="team in sortedTeams"
+            :key="team.id"
+            type="button"
+            class="pill px-3 py-1.5 text-xs"
+            :class="highlightTeamId === team.id && 'font-semibold'"
+            :aria-pressed="highlightTeamId === team.id"
+            :style="
+              highlightTeamId === team.id
+                ? { background: team.color ?? undefined, color: contrastText(team.color) }
+                : undefined
+            "
+            @click="highlightTeamId = highlightTeamId === team.id ? null : team.id"
+          >
+            <span
+              v-if="highlightTeamId !== team.id"
+              class="h-2 w-2 rounded-full"
+              :style="{ background: team.color ?? undefined }"
+            />
+            {{ team.name }}
+          </button>
+        </div>
+      </section>
 
       <section class="flex flex-col gap-3">
         <h2 class="section-title">Poules</h2>
