@@ -54,6 +54,10 @@ function playerLink(p: PlayerWithStats) {
   return { name: 'player', params: { playerId: p.id } }
 }
 
+function perKeeperGame(p: PlayerWithStats): string {
+  return (p.stats.goals_conceded_as_keeper / p.stats.games_as_keeper).toFixed(1)
+}
+
 // Tuiles "pour rire" : chacune est masquée tant qu'il n'y a pas de quoi la remplir.
 const funTiles = computed(() => {
   const s = stats.value
@@ -89,9 +93,21 @@ const funTiles = computed(() => {
       emoji: '🧽',
       label: 'La passoire',
       value: s.leakiest.name,
-      detail: `${(s.leakiest.stats.goals_against / s.leakiest.stats.played).toFixed(1)} buts encaissés par match`,
+      // Vrais buts encaissés dans les cages dès que des gardiens ont été saisis.
+      detail: s.leakiest.stats.games_as_keeper
+        ? `${perKeeperGame(s.leakiest)} buts encaissés par match dans les cages`
+        : `${(s.leakiest.stats.goals_against / s.leakiest.stats.played).toFixed(1)} buts encaissés par match`,
       to: playerLink(s.leakiest),
     },
+    // Avec un seul gardien saisi, le Mur serait aussi la Passoire : masqué.
+    s.best_keeper &&
+      s.best_keeper.id !== s.leakiest?.id && {
+        emoji: '🧱',
+        label: 'Le Mur',
+        value: s.best_keeper.name,
+        detail: `${perKeeperGame(s.best_keeper)} buts encaissés par match dans les cages`,
+        to: playerLink(s.best_keeper),
+      },
     s.most_titles && {
       emoji: '🏆',
       label: 'Collectionneur de titres',

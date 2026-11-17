@@ -83,6 +83,25 @@ function goalsPayload() {
   })
 }
 
+// ---- Gardiens (facultatif) : un joueur par équipe, null = non renseigné.
+const keepers = ref<Record<'a' | 'b', number | null>>({ a: null, b: null })
+const keeperKey = { a: 'keeper_a_id', b: 'keeper_b_id' } as const
+
+function toggleKeeper(slot: 'a' | 'b', playerId: number) {
+  keepers.value[slot] = keepers.value[slot] === playerId ? null : playerId
+}
+
+const keepersDirty = computed(
+  () => keepers.value.a !== props.game.keeper_a_id || keepers.value.b !== props.game.keeper_b_id,
+)
+
+const keepersProblem = computed(() =>
+  (keepers.value.a !== null || keepers.value.b !== null) &&
+  (scoreA.value === '' || scoreB.value === '')
+    ? 'Saisis le score avant les gardiens.'
+    : null,
+)
+
 watch(
   () => props.game,
   (game) => {
@@ -90,6 +109,7 @@ watch(
     scoreA.value = game.score_a ?? ''
     scoreB.value = game.score_b ?? ''
     goals.value = savedGoals(game)
+    keepers.value = { a: game.keeper_a_id, b: game.keeper_b_id }
   },
   { immediate: true },
 )
@@ -100,8 +120,11 @@ const dirty = computed(
     scheduledAt.value !== toLocalInput(props.game.scheduled_at) ||
     scoreA.value !== (props.game.score_a ?? '') ||
     scoreB.value !== (props.game.score_b ?? '') ||
-    goalsDirty.value,
+    goalsDirty.value ||
+    keepersDirty.value,
 )
+
+const detailsProblem = computed(() => goalsProblem.value ?? keepersProblem.value)
 
 async function save(payload: GamePayload) {
   error.value = null
@@ -129,6 +152,11 @@ function handleSave() {
   // dès que le score ou les buteurs changent.
   if (goalsDirty.value || (scoreChanged && payload.score_a !== undefined)) {
     payload.goals = goalsPayload()
+  }
+  for (const slot of ['a', 'b'] as const) {
+    if (keepers.value[slot] !== props.game[keeperKey[slot]]) {
+      payload[keeperKey[slot]] = keepers.value[slot]
+    }
   }
   save(payload)
 }
@@ -214,15 +242,18 @@ function setWinner(slot: 'a' | 'b') {
         v-if="teamsKnown"
         type="button"
         class="btn-ghost py-1 text-xs"
-        :class="game.goals.length > 0 && 'text-primary'"
+        :class="
+          (game.goals.length > 0 || game.keeper_a_id !== null || game.keeper_b_id !== null) &&
+          'text-primary'
+        "
         @click="showScorers = !showScorers"
       >
-        ⚽ Buteurs
+        ⚽ Buteurs · 🧤
       </button>
       <button
         type="submit"
         class="btn-primary py-1"
-        :disabled="!dirty || isSaving || !!goalsProblem"
+        :disabled="!dirty || isSaving || !!detailsProblem"
       >
         Enregistrer
       </button>
@@ -249,7 +280,23 @@ function setWinner(slot: 'a' | 'b') {
           :key="player.id"
           class="flex items-center justify-between gap-2 text-sm"
         >
-          <span class="truncate">{{ player.name }}</span>
+          <span class="flex min-w-0 items-center gap-1.5">
+            <button
+              type="button"
+              class="shrink-0 cursor-pointer rounded-full px-1.5 py-0.5 text-xs"
+              :class="
+                keepers[side.slot] === player.id
+                  ? 'bg-primary text-primary-text'
+                  : 'bg-surface opacity-40 hover:opacity-100'
+              "
+              :aria-pressed="keepers[side.slot] === player.id"
+              :title="`${player.name} gardien`"
+              @click.prevent="toggleKeeper(side.slot, player.id)"
+            >
+              🧤
+            </button>
+            <span class="truncate">{{ player.name }}</span>
+          </span>
           <input
             v-model.number="goals[player.id]"
             type="number"
@@ -262,10 +309,11 @@ function setWinner(slot: 'a' | 'b') {
         </label>
       </div>
       <p class="text-xs text-muted sm:col-span-2">
-        Facultatif. Les buts d'un joueur complètent automatiquement ceux de son coéquipier.
+        Facultatif. Les buts d'un joueur complètent automatiquement ceux de son coéquipier. 🧤
+        désigne le gardien de l'équipe (buts encaissés dans ses stats).
       </p>
     </div>
-    <p v-if="goalsProblem && showScorers" class="text-xs text-danger">{{ goalsProblem }}</p>
+    <p v-if="detailsProblem && showScorers" class="text-xs text-danger">{{ detailsProblem }}</p>
     <p v-if="error" class="text-xs text-danger">{{ error }}</p>
   </div>
 </template>

@@ -33,6 +33,7 @@ const sides = computed(() => {
       players: (team?.players ?? []).map((p) => ({
         ...p,
         goals: game.goals.find((g) => g.player_id === p.id)?.goals ?? null,
+        keeper: (slot === 'a' ? game.keeper_a_id : game.keeper_b_id) === p.id,
       })),
     }
   })
@@ -69,6 +70,7 @@ const sides = computed(() => {
                 <span v-if="p.goals !== null" class="font-semibold text-text"
                   >· {{ p.goals }} ⚽</span
                 >
+                <span v-if="p.keeper" title="Gardien" class="ml-0.5">🧤</span>
               </li>
             </ul>
           </div>

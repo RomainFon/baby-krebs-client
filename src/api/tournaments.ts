@@ -92,6 +92,9 @@ export interface GamePayload {
   score_b?: number | null
   // Buteurs : liste complète, remplace l'existant.
   goals?: GameGoal[]
+  // Gardiens : seules les clés envoyées sont modifiées.
+  keeper_a_id?: number | null
+  keeper_b_id?: number | null
 }
 
 export function updateGame(gameId: number, payload: GamePayload): Detail {

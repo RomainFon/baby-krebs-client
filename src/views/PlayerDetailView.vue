@@ -38,6 +38,12 @@ const tiles = computed(() => {
     { label: 'Buts contre', value: s.goals_against },
     { label: 'Différence', value: signed(s.goal_diff) },
     { label: 'Titres', value: s.titles ? `🏆 ${s.titles}` : '0', variant: 'paper' },
+    { label: 'Matchs gardien', value: s.games_as_keeper },
+    { label: 'Encaissés gardien', value: s.goals_conceded_as_keeper },
+    {
+      label: 'Moy. encaissée',
+      value: s.games_as_keeper ? (s.goals_conceded_as_keeper / s.games_as_keeper).toFixed(1) : '–',
+    },
   ]
 })
 
@@ -161,6 +167,13 @@ const verdict = computed(() => {
               title="Buts marqués par le joueur"
             >
               {{ game.goals_scored }} ⚽
+            </span>
+            <span
+              v-if="game.keeper"
+              class="rounded-full bg-surface-alt px-2 py-0.5 text-xs font-semibold"
+              title="Gardien dans ce match"
+            >
+              🧤
             </span>
             <span
               class="rounded px-1.5 py-0.5 text-xs font-bold"

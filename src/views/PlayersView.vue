@@ -20,6 +20,7 @@ const COLUMNS: { key: SortKey; label: string; title: string }[] = [
   { key: 'losses', label: 'D', title: 'Défaites' },
   { key: 'win_rate', label: '% V', title: 'Pourcentage de victoires' },
   { key: 'goals_scored', label: '⚽', title: 'Buts marqués par le joueur' },
+  { key: 'goals_conceded_as_keeper', label: '🧤', title: 'Buts encaissés comme gardien' },
   { key: 'goal_diff', label: 'Diff', title: 'Différence de buts' },
   { key: 'tournaments', label: 'Tournois', title: 'Tournois disputés' },
   { key: 'titles', label: '🏆', title: 'Tournois gagnés' },
@@ -126,6 +127,16 @@ const rows = computed(() => {
               {{ p.stats.played ? percent(p.stats.win_rate) : '–' }}
             </td>
             <td class="px-2 text-right tabular-nums">{{ p.stats.goals_scored || '' }}</td>
+            <td
+              class="px-2 text-right tabular-nums"
+              :title="
+                p.stats.games_as_keeper
+                  ? `${p.stats.games_as_keeper} match(s) dans les cages`
+                  : undefined
+              "
+            >
+              {{ p.stats.games_as_keeper ? p.stats.goals_conceded_as_keeper : '' }}
+            </td>
             <td class="px-2 text-right tabular-nums">{{ signed(p.stats.goal_diff) }}</td>
             <td class="px-2 text-right tabular-nums">{{ p.stats.tournaments }}</td>
             <td class="px-2 pr-4 text-right tabular-nums">{{ p.stats.titles || '' }}</td>

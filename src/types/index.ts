@@ -76,6 +76,9 @@ export interface Game {
   team_b_id: number | null
   score_a: number | null
   score_b: number | null
+  // Gardien de chaque équipe (facultatif, saisi avec le score).
+  keeper_a_id: number | null
+  keeper_b_id: number | null
   scheduled_at: string | null
   played_at: string | null
   // Place qualificative "A:1" (1er de la poule A), avant la fin des poules.
@@ -117,6 +120,9 @@ export interface PlayerStats {
   // Buts marqués par le joueur lui-même (matchs avec buteurs saisis).
   goals_scored: number
   games_with_goals: number
+  // Matchs joués comme gardien et buts encaissés dans ces matchs.
+  games_as_keeper: number
+  goals_conceded_as_keeper: number
 }
 
 export interface PlayerWithStats extends PlayerRef {
@@ -144,6 +150,8 @@ export interface PlayerDetail extends PlayerWithStats {
     score_for: number
     score_against: number
     goals_scored: number | null
+    // Gardien de son équipe dans ce match (null si non saisi).
+    keeper: boolean | null
     played_at: string | null
   }[]
 }
@@ -153,7 +161,10 @@ export interface GlobalStats {
   best_player: PlayerWithStats | null
   worst_player: PlayerWithStats | null
   top_scorer: PlayerWithStats | null
+  // Gardien qui encaisse le plus par match (à défaut : l'équipe).
   leakiest: PlayerWithStats | null
+  // Gardien qui encaisse le moins par match (null si aucun gardien saisi).
+  best_keeper: PlayerWithStats | null
   most_titles: PlayerWithStats | null
   fanny_victim: PlayerWithStats | null
   min_games_for_ranking: number
