@@ -128,7 +128,16 @@ const qualifSummary = computed(() => {
 
       <section class="flex flex-col gap-3">
         <h2 class="section-title">Poules</h2>
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <!-- 2 poules : 50/50 sur toute la largeur ; 4 poules : 2 × 2 ; sinon 3 par ligne.
+             items-start : déplier les matchs d'une poule n'étire pas sa voisine. -->
+        <div
+          class="grid items-start gap-4 md:grid-cols-2"
+          :class="
+            tournament.pools.length % 2 === 0 && tournament.pools.length <= 4
+              ? ''
+              : 'lg:grid-cols-3'
+          "
+        >
           <PoolTable
             v-for="pool in tournament.pools"
             :key="pool.id"

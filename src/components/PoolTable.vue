@@ -76,15 +76,29 @@ function signed(n: number): string {
     >
       {{ showGames ? 'Masquer les matchs' : `Voir les ${games.length} matchs` }}
     </button>
-    <div v-if="showGames" class="grid gap-3 p-3 pt-1 sm:grid-cols-2">
-      <GameCard
-        v-for="game in games"
-        :key="game.id"
-        :tournament="tournament"
-        :game="game"
-        :highlight-team-id="highlightTeamId"
-        @open="$emit('open', $event)"
-      />
+    <!-- Déroulé / enroulé : la rangée de la grille passe de 0fr à 1fr (hauteur
+         animée sans la connaître), le contenu glisse et apparaît en fondu.
+         Inerte une fois replié (pas de focus sur des matchs cachés). -->
+    <div
+      class="grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none"
+      :class="showGames ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
+      :inert="!showGames"
+    >
+      <div class="overflow-hidden">
+        <div
+          class="grid gap-3 p-3 pt-1 transition duration-300 ease-out motion-reduce:transition-none sm:grid-cols-2"
+          :class="showGames ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'"
+        >
+          <GameCard
+            v-for="game in games"
+            :key="game.id"
+            :tournament="tournament"
+            :game="game"
+            :highlight-team-id="highlightTeamId"
+            @open="$emit('open', $event)"
+          />
+        </div>
+      </div>
     </div>
   </section>
 </template>

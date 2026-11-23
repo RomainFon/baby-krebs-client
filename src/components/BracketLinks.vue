@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { TournamentDetail } from '@/types'
-import { winnerSlot } from '@/lib/tournament'
+import { STAGE_ACCENT, winnerSlot } from '@/lib/tournament'
 
 // Pointillés "vainqueur → match suivant" par-dessus l'arbre (Ligue des
 // champions + Ligue des espoirs + grande finale). Positions mesurées dans le
@@ -11,7 +11,7 @@ const props = defineProps<{ tournament: TournamentDetail; highlightTeamId?: numb
 
 const svg = ref<SVGSVGElement | null>(null)
 const size = ref({ width: 0, height: 0 })
-const paths = ref<{ key: string; d: string; dimmed: boolean }[]>([])
+const paths = ref<{ key: string; d: string; dimmed: boolean; color: string }[]>([])
 
 const GAP = 12 // demi-espace entre deux colonnes (gap-6)
 
@@ -71,7 +71,11 @@ function compute() {
           : Math.min(from.top, to.top) - GAP
       d = `M ${from.right} ${from.mid} H ${from.right + GAP} V ${gapY} H ${to.left - GAP} V ${to.mid} H ${to.left}`
     }
-    result.push({ key: `${game.id}-${game.winner_to_game_id}`, d, dimmed })
+    // Couleur de la ligue de départ (lime en Ligue des champions, blanc en
+    // Ligue des espoirs), sauf les liens vers la grande finale : couleur finale.
+    const target = props.tournament.games.find((g) => g.id === game.winner_to_game_id)
+    const color = STAGE_ACCENT[target?.stage === 'final' ? 'final' : game.stage]
+    result.push({ key: `${game.id}-${game.winner_to_game_id}`, d, dimmed, color })
   }
   paths.value = result
 }
@@ -106,7 +110,7 @@ watch(
       :key="p.key"
       :d="p.d"
       fill="none"
-      stroke="var(--color-primary)"
+      :stroke="p.color"
       stroke-width="2"
       stroke-dasharray="0.5 6"
       stroke-linecap="round"
