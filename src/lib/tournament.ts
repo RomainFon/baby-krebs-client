@@ -170,14 +170,21 @@ export function teamStatus(tournament: TournamentDetail, teamId: number): string
   return 'Éliminée'
 }
 
-export function formatDate(iso: string | null, withDay = true): string {
-  if (!iso) return 'Date à définir'
-  const date = new Date(iso)
-  return date.toLocaleString('fr-FR', {
-    ...(withDay ? { weekday: 'short', day: 'numeric', month: 'short' } : {}),
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+/**
+ * Jour d'une date de l'API : "AAAA-MM-JJ" (scheduled_at, starts_at, lu comme
+ * un jour local, sans décalage de fuseau) ou ISO complet (played_at).
+ */
+export function parseDay(value: string | null): Date | null {
+  if (!value) return null
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value)
+}
+
+/** Jour seul, sans heure (retours du 2026-11-23) : "lun. 23 nov.". */
+export function formatDate(value: string | null): string {
+  const date = parseDay(value)
+  if (!date) return 'Date à définir'
+  return date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 /** Couleur d'accent par phase, comme l'exemple (teal / coral / ambre). */

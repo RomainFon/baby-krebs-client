@@ -63,6 +63,7 @@ const rows = computed(() =>
       }}</span>
     </div>
     <div
+      :data-game-card="game.id"
       class="relative overflow-hidden rounded-2xl bg-surface transition-colors group-hover:bg-surface-alt"
       :class="!involved && game.stage === 'final' && 'ring-1 ring-primary/40'"
       :style="involved ? { boxShadow: `0 0 0 2px ${highlightColor}` } : undefined"
@@ -100,8 +101,16 @@ const rows = computed(() =>
         </span>
       </div>
     </div>
-    <p v-if="destination" class="mt-1.5 px-1 text-[11px] text-muted">
-      ↘ Perdant → {{ destination }}
+    <!-- Dans l'arbre, la ligne est toujours là (invisible si sans objet) pour
+         que toutes les cartes aient la même hauteur et restent alignées d'une
+         colonne à l'autre (ex. grande finale face à la finale Champions). -->
+    <p
+      v-if="showLoserDestination"
+      class="mt-1.5 px-1 text-[11px] text-muted"
+      :class="!destination && 'invisible'"
+      :aria-hidden="!destination"
+    >
+      ↘ Perdant → {{ destination ?? '–' }}
     </p>
   </button>
 </template>

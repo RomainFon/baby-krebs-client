@@ -8,14 +8,8 @@ import { extractErrorMessage } from '@/lib/apiError'
 const props = defineProps<{ tournament: TournamentDetail; game: Game }>()
 const emit = defineEmits<{ saved: [detail: TournamentDetail] }>()
 
-// <input type="datetime-local"> travaille en heure locale sans fuseau :
-// conversion explicite vers/depuis l'ISO UTC de l'API.
-function toLocalInput(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
+// Jour du match seulement : <input type="date"> et l'API parlent tous deux
+// "AAAA-MM-JJ", aucune conversion de fuseau.
 
 const scheduledAt = ref('')
 const scoreA = ref<number | ''>('')
@@ -83,7 +77,8 @@ function goalsPayload() {
   })
 }
 
-// ---- Gardiens (facultatif) : un joueur par équipe, null = non renseigné.
+// ---- Gardiens (obligatoires avec un score) : un joueur par équipe, son
+// coéquipier est l'attaquant du match.
 const keepers = ref<Record<'a' | 'b', number | null>>({ a: null, b: null })
 const keeperKey = { a: 'keeper_a_id', b: 'keeper_b_id' } as const
 
@@ -95,17 +90,19 @@ const keepersDirty = computed(
   () => keepers.value.a !== props.game.keeper_a_id || keepers.value.b !== props.game.keeper_b_id,
 )
 
-const keepersProblem = computed(() =>
-  (keepers.value.a !== null || keepers.value.b !== null) &&
-  (scoreA.value === '' || scoreB.value === '')
-    ? 'Saisis le score avant les gardiens.'
-    : null,
-)
+const hasScore = computed(() => scoreA.value !== '' && scoreB.value !== '')
+const keepersProblem = computed(() => {
+  const anyKeeper = keepers.value.a !== null || keepers.value.b !== null
+  if (anyKeeper && !hasScore.value) return 'Saisis le score avant les gardiens.'
+  if (hasScore.value && (keepers.value.a === null || keepers.value.b === null))
+    return 'Indique le gardien de chaque équipe (🧤).'
+  return null
+})
 
 watch(
   () => props.game,
   (game) => {
-    scheduledAt.value = toLocalInput(game.scheduled_at)
+    scheduledAt.value = game.scheduled_at ?? ''
     scoreA.value = game.score_a ?? ''
     scoreB.value = game.score_b ?? ''
     goals.value = savedGoals(game)
@@ -117,7 +114,7 @@ watch(
 const teamsKnown = computed(() => props.game.team_a_id !== null && props.game.team_b_id !== null)
 const dirty = computed(
   () =>
-    scheduledAt.value !== toLocalInput(props.game.scheduled_at) ||
+    scheduledAt.value !== (props.game.scheduled_at ?? '') ||
     scoreA.value !== (props.game.score_a ?? '') ||
     scoreB.value !== (props.game.score_b ?? '') ||
     goalsDirty.value ||
@@ -125,6 +122,15 @@ const dirty = computed(
 )
 
 const detailsProblem = computed(() => goalsProblem.value ?? keepersProblem.value)
+
+// Le gardien étant obligatoire, le panneau s'ouvre dès qu'un score est saisi
+// sans gardien.
+watch(
+  () => hasScore.value && (keepers.value.a === null || keepers.value.b === null) && dirty.value,
+  (needed) => {
+    if (needed) showScorers.value = true
+  },
+)
 
 async function save(payload: GamePayload) {
   error.value = null
@@ -140,7 +146,7 @@ async function save(payload: GamePayload) {
 
 function handleSave() {
   const payload: GamePayload = {
-    scheduled_at: scheduledAt.value ? new Date(scheduledAt.value).toISOString() : null,
+    scheduled_at: scheduledAt.value || null,
   }
   const scoreChanged =
     scoreA.value !== (props.game.score_a ?? '') || scoreB.value !== (props.game.score_b ?? '')
@@ -234,9 +240,9 @@ function setWinner(slot: 'a' | 'b') {
       </div>
       <input
         v-model="scheduledAt"
-        type="datetime-local"
+        type="date"
         class="field w-auto px-2 py-1 text-sm"
-        aria-label="Date du match"
+        aria-label="Jour du match"
       />
       <button
         v-if="teamsKnown"
@@ -309,11 +315,13 @@ function setWinner(slot: 'a' | 'b') {
         </label>
       </div>
       <p class="text-xs text-muted sm:col-span-2">
-        Facultatif. Les buts d'un joueur complètent automatiquement ceux de son coéquipier. 🧤
-        désigne le gardien de l'équipe (buts encaissés dans ses stats).
+        🧤 obligatoire : le gardien de chaque équipe (son coéquipier est l'attaquant). Buteurs
+        facultatifs : les buts d'un joueur complètent automatiquement ceux de son coéquipier.
       </p>
     </div>
-    <p v-if="detailsProblem && showScorers" class="text-xs text-danger">{{ detailsProblem }}</p>
+    <p v-if="detailsProblem && (showScorers || dirty)" class="text-xs text-danger">
+      {{ detailsProblem }}
+    </p>
     <p v-if="error" class="text-xs text-danger">{{ error }}</p>
   </div>
 </template>

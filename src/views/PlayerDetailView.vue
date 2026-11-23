@@ -38,7 +38,15 @@ const tiles = computed(() => {
     { label: 'Buts contre', value: s.goals_against },
     { label: 'Différence', value: signed(s.goal_diff) },
     { label: 'Titres', value: s.titles ? `🏆 ${s.titles}` : '0', variant: 'paper' },
+    { label: 'Matchs attaquant', value: s.games_as_attacker },
+    {
+      label: '% V attaque',
+      value: s.games_as_attacker ? percent(s.attacker_win_rate) : '–',
+    },
+    { label: 'Buts en attaque', value: s.goals_scored_as_attacker },
     { label: 'Matchs gardien', value: s.games_as_keeper },
+    { label: '% V défense', value: s.games_as_keeper ? percent(s.keeper_win_rate) : '–' },
+    { label: 'Buts en défense', value: s.goals_scored_as_keeper },
     { label: 'Encaissés gardien', value: s.goals_conceded_as_keeper },
     {
       label: 'Moy. encaissée',

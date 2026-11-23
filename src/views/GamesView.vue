@@ -5,6 +5,7 @@ import type { Game, TournamentDetail } from '@/types'
 import {
   gameTitle,
   isPlayed,
+  parseDay,
   slotLabel,
   STAGE_ACCENT,
   winnerSlot,
@@ -37,8 +38,8 @@ const days = computed(() => {
   const games = props.tournament.games
     .filter((g) => filter.value === 'all' || (filter.value === 'played') === isPlayed(g))
     .sort((a, b) => {
-      const da = dateOf(a) ? Date.parse(dateOf(a)!) : Infinity
-      const db = dateOf(b) ? Date.parse(dateOf(b)!) : Infinity
+      const da = parseDay(dateOf(a))?.getTime() ?? Infinity
+      const db = parseDay(dateOf(b))?.getTime() ?? Infinity
       return da - db || a.number - b.number
     })
   if (filter.value === 'played') games.reverse()
@@ -47,7 +48,7 @@ const days = computed(() => {
   for (const game of games) {
     const iso = dateOf(game)
     const key = iso
-      ? new Date(iso).toLocaleDateString('fr-FR', {
+      ? parseDay(iso)!.toLocaleDateString('fr-FR', {
           weekday: 'long',
           day: 'numeric',
           month: 'long',
@@ -57,13 +58,6 @@ const days = computed(() => {
   }
   return [...groups.entries()].map(([label, games]) => ({ label, games }))
 })
-
-function time(game: Game): string {
-  const iso = dateOf(game)
-  return iso
-    ? new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    : '–'
-}
 </script>
 
 <template>
@@ -102,7 +96,6 @@ function time(game: Game): string {
         :style="{ borderLeft: `3px solid ${STAGE_ACCENT[game.stage]}` }"
         @click="openedGameId = game.id"
       >
-        <span class="w-12 shrink-0 text-sm tabular-nums text-muted">{{ time(game) }}</span>
         <div class="min-w-0 flex-1">
           <p class="text-[11px] text-muted">
             M{{ game.number }} · {{ gameTitle(tournament, game) }}

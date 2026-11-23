@@ -123,6 +123,16 @@ export interface PlayerStats {
   // Matchs joués comme gardien et buts encaissés dans ces matchs.
   games_as_keeper: number
   goals_conceded_as_keeper: number
+  // Postes déduits du gardien saisi : gardien = défenseur, coéquipier = attaquant.
+  wins_as_keeper: number
+  keeper_win_rate: number
+  games_as_attacker: number
+  wins_as_attacker: number
+  attacker_win_rate: number
+  goals_scored_as_attacker: number
+  games_with_goals_as_attacker: number
+  goals_scored_as_keeper: number
+  games_with_goals_as_keeper: number
 }
 
 export interface PlayerWithStats extends PlayerRef {

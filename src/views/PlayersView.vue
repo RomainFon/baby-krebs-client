@@ -3,28 +3,155 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { fetchPlayers } from '@/api/tournaments'
 import type { PlayerStats, PlayerWithStats } from '@/types'
-import { percent, signed } from '@/lib/format'
+import { percent } from '@/lib/format'
 import PageTitle from '@/components/ui/PageTitle.vue'
 
 const players = ref<PlayerWithStats[]>([])
 const isLoading = ref(true)
 const search = ref('')
 
-type SortKey = 'name' | keyof PlayerStats
-const sortKey = ref<SortKey>('win_rate')
-const sortDesc = ref(true)
-
-const COLUMNS: { key: SortKey; label: string; title: string }[] = [
-  { key: 'played', label: 'J', title: 'Matchs joués' },
-  { key: 'wins', label: 'V', title: 'Victoires' },
-  { key: 'losses', label: 'D', title: 'Défaites' },
-  { key: 'win_rate', label: '% V', title: 'Pourcentage de victoires' },
-  { key: 'goals_scored', label: '⚽', title: 'Buts marqués par le joueur' },
-  { key: 'goals_conceded_as_keeper', label: '🧤', title: 'Buts encaissés comme gardien' },
-  { key: 'goal_diff', label: 'Diff', title: 'Différence de buts' },
-  { key: 'tournaments', label: 'Tournois', title: 'Tournois disputés' },
-  { key: 'titles', label: '🏆', title: 'Tournois gagnés' },
+// Deux classements : le poste d'un joueur sur un match est déduit du gardien
+// saisi (gardien = défenseur, son coéquipier = attaquant).
+type Role = 'attack' | 'defense'
+const role = ref<Role>('attack')
+const ROLES: { key: Role; label: string }[] = [
+  { key: 'attack', label: 'Attaquants' },
+  { key: 'defense', label: 'Défenseurs' },
 ]
+
+type Column = {
+  key: string
+  label: string
+  title: string
+  value: (s: PlayerStats) => number
+  display: (s: PlayerStats) => string | number
+  cls?: string
+}
+
+const perGame = (n: number, games: number) => (games ? n / games : 0)
+
+const COLUMNS: Record<Role, Column[]> = {
+  attack: [
+    {
+      key: 'played',
+      label: 'J',
+      title: 'Matchs joués en attaque',
+      value: (s) => s.games_as_attacker,
+      display: (s) => s.games_as_attacker,
+    },
+    {
+      key: 'wins',
+      label: 'V',
+      title: 'Victoires en attaque',
+      value: (s) => s.wins_as_attacker,
+      display: (s) => s.wins_as_attacker,
+      cls: 'text-winner',
+    },
+    {
+      key: 'losses',
+      label: 'D',
+      title: 'Défaites en attaque',
+      value: (s) => s.games_as_attacker - s.wins_as_attacker,
+      display: (s) => s.games_as_attacker - s.wins_as_attacker,
+      cls: 'text-loser',
+    },
+    {
+      key: 'rate',
+      label: '% V',
+      title: 'Pourcentage de victoires en attaque',
+      value: (s) => s.attacker_win_rate,
+      display: (s) => percent(s.attacker_win_rate),
+    },
+    {
+      key: 'goals',
+      label: '⚽',
+      title: 'Buts marqués en attaque',
+      value: (s) => s.goals_scored_as_attacker,
+      display: (s) => (s.games_with_goals_as_attacker ? s.goals_scored_as_attacker : ''),
+    },
+    {
+      key: 'avg',
+      label: '⚽/M',
+      title: 'Buts par match en attaque (matchs avec buteurs saisis)',
+      value: (s) => perGame(s.goals_scored_as_attacker, s.games_with_goals_as_attacker),
+      display: (s) =>
+        s.games_with_goals_as_attacker
+          ? perGame(s.goals_scored_as_attacker, s.games_with_goals_as_attacker).toFixed(1)
+          : '',
+    },
+  ],
+  defense: [
+    {
+      key: 'played',
+      label: 'J',
+      title: 'Matchs joués en défense',
+      value: (s) => s.games_as_keeper,
+      display: (s) => s.games_as_keeper,
+    },
+    {
+      key: 'wins',
+      label: 'V',
+      title: 'Victoires en défense',
+      value: (s) => s.wins_as_keeper,
+      display: (s) => s.wins_as_keeper,
+      cls: 'text-winner',
+    },
+    {
+      key: 'losses',
+      label: 'D',
+      title: 'Défaites en défense',
+      value: (s) => s.games_as_keeper - s.wins_as_keeper,
+      display: (s) => s.games_as_keeper - s.wins_as_keeper,
+      cls: 'text-loser',
+    },
+    {
+      key: 'rate',
+      label: '% V',
+      title: 'Pourcentage de victoires en défense',
+      value: (s) => s.keeper_win_rate,
+      display: (s) => percent(s.keeper_win_rate),
+    },
+    {
+      key: 'goals',
+      label: '⚽',
+      title: 'Buts marqués en défense',
+      value: (s) => s.goals_scored_as_keeper,
+      display: (s) => (s.games_with_goals_as_keeper ? s.goals_scored_as_keeper : ''),
+    },
+    {
+      key: 'avg',
+      label: '⚽/M',
+      title: 'Buts par match en défense (matchs avec buteurs saisis)',
+      value: (s) => perGame(s.goals_scored_as_keeper, s.games_with_goals_as_keeper),
+      display: (s) =>
+        s.games_with_goals_as_keeper
+          ? perGame(s.goals_scored_as_keeper, s.games_with_goals_as_keeper).toFixed(1)
+          : '',
+    },
+    {
+      key: 'conceded',
+      label: '🧤',
+      title: 'Buts encaissés en défense',
+      value: (s) => s.goals_conceded_as_keeper,
+      display: (s) => s.goals_conceded_as_keeper,
+    },
+    {
+      key: 'conceded_avg',
+      label: '🧤/M',
+      title: 'Buts encaissés par match en défense',
+      value: (s) => perGame(s.goals_conceded_as_keeper, s.games_as_keeper),
+      display: (s) => perGame(s.goals_conceded_as_keeper, s.games_as_keeper).toFixed(1),
+    },
+  ],
+}
+
+const columns = computed(() => COLUMNS[role.value])
+const gamesAtRole = (s: PlayerStats) =>
+  role.value === 'attack' ? s.games_as_attacker : s.games_as_keeper
+
+// Tri par colonne (clé commune aux deux postes, donc conservé en changeant d'onglet).
+const sortKey = ref<string>('rate')
+const sortDesc = ref(true)
 
 onMounted(async () => {
   try {
@@ -34,28 +161,27 @@ onMounted(async () => {
   }
 })
 
-function sortBy(key: SortKey) {
+function sortBy(key: string) {
   if (sortKey.value === key) sortDesc.value = !sortDesc.value
   else {
     sortKey.value = key
-    sortDesc.value = key !== 'name'
+    // Moins on encaisse, mieux c'est : tri croissant par défaut.
+    sortDesc.value =
+      key !== 'name' && !(role.value === 'defense' && ['conceded', 'conceded_avg'].includes(key))
   }
 }
 
 const rows = computed(() => {
   const q = search.value.trim().toLowerCase()
-  const key = sortKey.value
+  const col = columns.value.find((c) => c.key === sortKey.value)
   return players.value
-    .filter((p) => p.name.toLowerCase().includes(q))
+    .filter((p) => gamesAtRole(p.stats) > 0 && p.name.toLowerCase().includes(q))
     .sort((a, b) => {
-      const va = key === 'name' ? a.name : a.stats[key]
-      const vb = key === 'name' ? b.name : b.stats[key]
-      // Départage stable : plus de matchs joués d'abord, puis le nom.
-      const cmp =
-        typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number)
+      const cmp = col ? col.value(a.stats) - col.value(b.stats) : a.name.localeCompare(b.name)
+      // Départage stable : plus de matchs à ce poste d'abord, puis le nom.
       return (
         (sortDesc.value ? -cmp : cmp) ||
-        b.stats.played - a.stats.played ||
+        gamesAtRole(b.stats) - gamesAtRole(a.stats) ||
         a.name.localeCompare(b.name)
       )
     })
@@ -74,9 +200,26 @@ const rows = computed(() => {
       />
     </div>
 
+    <div class="flex gap-2">
+      <button
+        v-for="r in ROLES"
+        :key="r.key"
+        type="button"
+        class="pill"
+        :class="role === r.key && 'pill-active'"
+        @click="role = r.key"
+      >
+        {{ r.label }}
+      </button>
+    </div>
+
     <p v-if="isLoading" class="text-sm text-muted">Chargement…</p>
-    <p v-else-if="players.length === 0" class="text-sm text-muted">
-      Aucun joueur inscrit pour l'instant.
+    <p v-else-if="rows.length === 0" class="text-sm text-muted">
+      {{
+        search
+          ? 'Aucun joueur trouvé.'
+          : `Aucun match joué ${role === 'attack' ? 'en attaque' : 'en défense'} pour l'instant (le poste vient du gardien 🧤 saisi sur chaque match).`
+      }}
     </p>
 
     <div v-else class="card -mx-4 overflow-x-auto sm:mx-0">
@@ -89,9 +232,9 @@ const rows = computed(() => {
               </button>
             </th>
             <th
-              v-for="col in COLUMNS"
+              v-for="col in columns"
               :key="col.key"
-              class="px-2 py-2.5 text-right whitespace-nowrap"
+              class="px-2 py-2.5 text-right whitespace-nowrap last:pr-4"
               :title="col.title"
             >
               <button
@@ -120,26 +263,14 @@ const rows = computed(() => {
                 <span class="hover:underline">{{ p.name }}</span>
               </RouterLink>
             </td>
-            <td class="px-2 text-right tabular-nums">{{ p.stats.played }}</td>
-            <td class="px-2 text-right tabular-nums text-winner">{{ p.stats.wins }}</td>
-            <td class="px-2 text-right tabular-nums text-loser">{{ p.stats.losses }}</td>
-            <td class="px-2 text-right tabular-nums">
-              {{ p.stats.played ? percent(p.stats.win_rate) : '–' }}
-            </td>
-            <td class="px-2 text-right tabular-nums">{{ p.stats.goals_scored || '' }}</td>
             <td
-              class="px-2 text-right tabular-nums"
-              :title="
-                p.stats.games_as_keeper
-                  ? `${p.stats.games_as_keeper} match(s) dans les cages`
-                  : undefined
-              "
+              v-for="col in columns"
+              :key="col.key"
+              class="px-2 text-right whitespace-nowrap tabular-nums last:pr-4"
+              :class="col.cls"
             >
-              {{ p.stats.games_as_keeper ? p.stats.goals_conceded_as_keeper : '' }}
+              {{ col.display(p.stats) }}
             </td>
-            <td class="px-2 text-right tabular-nums">{{ signed(p.stats.goal_diff) }}</td>
-            <td class="px-2 text-right tabular-nums">{{ p.stats.tournaments }}</td>
-            <td class="px-2 pr-4 text-right tabular-nums">{{ p.stats.titles || '' }}</td>
           </tr>
         </tbody>
       </table>

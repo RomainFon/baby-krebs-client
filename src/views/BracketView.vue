@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import type { Game, TournamentDetail } from '@/types'
 import { contrastText, isPlayed, slotLabel, formatDate } from '@/lib/tournament'
 import PoolTable from '@/components/PoolTable.vue'
-import BracketRow from '@/components/BracketRow.vue'
+import BracketGrid from '@/components/BracketGrid.vue'
 import GameModal from '@/components/GameModal.vue'
 
 const props = defineProps<{ tournament: TournamentDetail }>()
@@ -149,25 +149,13 @@ const qualifSummary = computed(() => {
         </p>
       </section>
 
-      <section class="flex flex-col gap-3">
-        <h2 class="section-title text-winner">Ligue des champions</h2>
-        <BracketRow
-          :tournament="tournament"
-          stage="winner"
-          with-final
-          :highlight-team-id="highlightTeamId"
-          @open="open"
-        />
-      </section>
+      <!-- Phase finale : une seule grille qui défile horizontalement (les
+           pointillés relient aussi la finale Espoirs à la grande finale). -->
+      <div class="-mx-4 overflow-x-auto px-4 pb-2">
+        <BracketGrid :tournament="tournament" :highlight-team-id="highlightTeamId" @open="open" />
+      </div>
 
-      <section v-if="hasLoserBracket" class="flex flex-col gap-3">
-        <h2 class="section-title text-loser">Ligue des espoirs</h2>
-        <BracketRow
-          :tournament="tournament"
-          stage="loser"
-          :highlight-team-id="highlightTeamId"
-          @open="open"
-        />
+      <section v-if="hasLoserBracket" class="-mt-4">
         <p class="text-xs text-muted">
           Le vainqueur de la Ligue des espoirs rejoint la grande finale · ↘ descente en Ligue des
           espoirs · en gras : vainqueur du match

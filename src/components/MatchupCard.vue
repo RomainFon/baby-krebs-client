@@ -2,23 +2,19 @@
 import TeamBadge from '@/components/TeamBadge.vue'
 import { computed } from 'vue'
 import type { Game, TournamentDetail } from '@/types'
-import { gameTitle, slotLabel, teamById } from '@/lib/tournament'
+import { gameTitle, parseDay, slotLabel, teamById } from '@/lib/tournament'
 
 // Affiche d'un match façon maquette : bloc lime "Équipe VS Équipe", puis
-// bloc blanc avec la phase, l'heure en grand et la date.
+// bloc blanc avec la phase, le jour en grand et le jour de la semaine.
 const props = defineProps<{ tournament: TournamentDetail; game: Game }>()
 defineEmits<{ open: [game: Game] }>()
 
-const date = computed(() => (props.game.scheduled_at ? new Date(props.game.scheduled_at) : null))
-const time = computed(() =>
-  date.value
-    ? date.value.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    : '--:--',
-)
+const date = computed(() => parseDay(props.game.scheduled_at))
 const day = computed(() =>
-  date.value
-    ? date.value.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
-    : 'Date à définir',
+  date.value ? date.value.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '--',
+)
+const weekday = computed(() =>
+  date.value ? date.value.toLocaleDateString('fr-FR', { weekday: 'long' }) : 'Date à définir',
 )
 </script>
 
@@ -50,8 +46,8 @@ const day = computed(() =>
         {{ gameTitle(tournament, game) }}
       </p>
       <div class="text-center">
-        <p class="display text-4xl sm:text-5xl">{{ time }}</p>
-        <p class="text-xs text-ink/60">{{ day }}</p>
+        <p class="display text-3xl sm:text-4xl">{{ day }}</p>
+        <p class="text-xs text-ink/60 first-letter:uppercase">{{ weekday }}</p>
       </div>
       <p class="text-right font-display text-sm text-ink/50 uppercase sm:text-base">
         M{{ game.number }}

@@ -37,7 +37,12 @@ function signed(n: number): string {
   <section class="overflow-hidden rounded-3xl bg-surface">
     <header class="flex items-center justify-between px-5 pt-5 pb-3">
       <h3 class="display text-3xl">Poule {{ pool.name }}</h3>
-      <span class="text-xs text-muted">V · D · diff</span>
+      <!-- Mêmes largeurs que les colonnes des lignes : chaque libellé est centré sur ses chiffres. -->
+      <span class="flex text-xs text-muted">
+        <span class="w-6 text-center" title="Victoires">V</span>
+        <span class="w-6 text-center" title="Défaites">D</span>
+        <span class="w-10 text-center" title="Différence de buts">diff</span>
+      </span>
     </header>
     <ol>
       <li
@@ -57,8 +62,11 @@ function signed(n: number): string {
         <span class="flex-1 truncate font-medium">{{
           teamById(tournament, row.team_id)?.name
         }}</span>
-        <span class="tabular-nums text-muted">{{ row.wins }} · {{ row.losses }} ·</span>
-        <span class="w-8 text-right tabular-nums">{{ signed(row.goal_diff) }}</span>
+        <span class="flex tabular-nums">
+          <span class="w-6 text-center text-muted">{{ row.wins }}</span>
+          <span class="w-6 text-center text-muted">{{ row.losses }}</span>
+          <span class="w-10 text-center">{{ signed(row.goal_diff) }}</span>
+        </span>
       </li>
     </ol>
     <button
