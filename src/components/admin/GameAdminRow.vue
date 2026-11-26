@@ -7,11 +7,14 @@ import {
   isPlayed,
   isStarted,
   liveSets,
+  setsLabel,
   slotLabel,
   STAGE_ACCENT,
   teamById,
 } from '@/lib/tournament'
 import { extractErrorMessage } from '@/lib/apiError'
+import { plural } from '@/lib/format'
+import TeamBadge from '@/components/TeamBadge.vue'
 
 const props = defineProps<{ tournament: TournamentDetail; game: Game }>()
 const emit = defineEmits<{ saved: [detail: TournamentDetail] }>()
@@ -295,8 +298,10 @@ watch(
     sets.value = setRows(game, game.best_of)
     goals.value = savedGoals(game)
     keepers.value = { a: game.keeper_a_id, b: game.keeper_b_id }
-    // Après un enregistrement, on passe à la manche suivante à saisir.
+    // Après un enregistrement, on passe à la manche suivante à saisir et le
+    // détail d'un match terminé se replie.
     activeManche.value = defaultManche()
+    showDetails.value = false
   },
   { immediate: true },
 )
@@ -386,21 +391,80 @@ function mancheScore(s: SetInput): string {
   return isFilled(s) ? `${s.a === '' ? '?' : s.a}-${s.b === '' ? '?' : s.b}` : ''
 }
 
-const shortcutClass =
-  'cursor-pointer rounded-full bg-surface-alt px-2 py-0.5 text-[10px] font-bold text-muted hover:bg-primary hover:text-primary-text'
+// Panneau joueurs (gardien + buteurs) : toujours en BO3/BO5 (chaque
+// manche s'y saisit), en BO1 dès qu'un score est saisi (gardien
+// obligatoire) ou sur demande.
+// Un match terminé se replie en résumé d'une ligne (« Modifier » le rouvre).
+const detailsOpen = computed(() => {
+  if (!teamsKnown.value) return false
+  if (showDetails.value) return true
+  if (isPlayed(props.game) && !dirty.value) return false
+  return multi.value || hasScore.value
+})
+
+/** Résumé d'un match terminé : gardiens et buteurs (toutes manches). */
+const summary = computed(() => {
+  const game = props.game
+  const name = (id: number | null) =>
+    sides.value.flatMap((s) => s.players).find((p) => p.id === id)?.name
+  const keeperIds =
+    game.best_of > 1
+      ? (game.sets ?? []).flatMap((s) => [s.keeper_a_id, s.keeper_b_id])
+      : [game.keeper_a_id, game.keeper_b_id]
+  const keepers = [...new Set(keeperIds)].map(name).filter(Boolean)
+  const totals = new Map<number, number>()
+  for (const g of game.goals) totals.set(g.player_id, (totals.get(g.player_id) ?? 0) + g.goals)
+  const scorers = [...totals]
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id, n]) => `${name(id)} ${n}`)
+  return { keepers: keepers.join(', '), scorers: scorers.join(', ') }
+})
+
+// Barre d'actions : seulement s'il y a quelque chose à enregistrer ou à effacer.
+const showActions = computed(
+  () => dirty.value || (isStarted(props.game) && (detailsOpen.value || !isPlayed(props.game))),
+)
+
+const scoreInput =
+  'field h-12 w-12 px-0 text-center font-display text-2xl tabular-nums sm:h-14 sm:w-16 sm:text-3xl'
+const smallScoreInput = 'field h-10 w-14 px-0 text-center font-display text-xl tabular-nums'
 </script>
 
 <template>
-  <div
-    class="card flex flex-col gap-2 px-3 py-2.5"
+  <article
+    class="card flex flex-col gap-4 p-4 sm:p-5"
+    :class="!teamsKnown && 'opacity-70'"
     :style="{ borderLeft: `3px solid ${STAGE_ACCENT[game.stage]}` }"
   >
-    <div class="flex items-center justify-between gap-2 text-xs text-muted">
-      <span>M{{ game.number }} · {{ gameTitle(tournament, game) }}</span>
-      <span class="flex items-center gap-2">
-        <!-- Format du match, figé une fois la première manche saisie. -->
+    <!-- En-tête : numéro et tour, statut, jour, format. -->
+    <header class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex min-w-0 items-center gap-2 text-sm">
+        <span class="rounded-full bg-surface-alt px-2.5 py-0.5 text-xs font-bold">
+          M{{ game.number }}
+        </span>
+        <span class="truncate text-muted">{{ gameTitle(tournament, game) }}</span>
         <span
-          class="flex items-center gap-0.5 rounded-full bg-surface-alt p-0.5"
+          v-if="isPlayed(game)"
+          class="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary"
+          >Joué</span
+        >
+        <span
+          v-else-if="liveSets(game)"
+          class="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary"
+          >En cours</span
+        >
+      </div>
+      <div class="flex items-center gap-2">
+        <input
+          v-model="scheduledAt"
+          type="date"
+          class="h-8 rounded-full border border-line bg-input px-3 text-xs text-muted outline-none focus:border-primary"
+          aria-label="Jour du match"
+        />
+        <!-- Format du match, figé une fois la première manche saisie. -->
+        <div
+          class="flex items-center rounded-full bg-surface-alt p-0.5"
           role="group"
           aria-label="Format du match"
           :title="isStarted(game) ? 'Efface le score pour changer le format' : 'Format du match'"
@@ -409,7 +473,7 @@ const shortcutClass =
             v-for="format in [1, 3, 5] as const"
             :key="format"
             type="button"
-            class="rounded-full px-2 py-0.5 text-[10px] font-bold disabled:cursor-not-allowed"
+            class="rounded-full px-2.5 py-1 text-[11px] font-bold disabled:cursor-not-allowed"
             :class="
               bestOf === format
                 ? 'bg-primary text-primary-text'
@@ -421,238 +485,254 @@ const shortcutClass =
           >
             BO{{ format }}
           </button>
-        </span>
-        <span v-if="isPlayed(game)" class="text-winner">Joué</span>
-        <span v-else-if="liveSets(game)" class="text-primary"
-          >En cours · {{ liveSets(game)!.a }}–{{ liveSets(game)!.b }}</span
-        >
-      </span>
-    </div>
-
-    <form class="flex flex-col gap-2" @submit.prevent="handleSave">
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="flex min-w-0 flex-1 basis-64 items-center gap-2">
-          <div class="flex min-w-0 flex-1 items-center justify-end gap-1.5">
-            <span class="truncate text-sm" :class="game.team_a_id === null && 'italic text-muted'">
-              {{ slotLabel(tournament, game, 'a') }}
-            </span>
-            <template v-if="!multi">
-              <button
-                v-if="teamsKnown"
-                type="button"
-                :class="shortcutClass"
-                :title="`Victoire ${slotLabel(tournament, game, 'a')}`"
-                @click="setWinner('a')"
-              >
-                {{ target }}
-              </button>
-              <input
-                :value="scoreA"
-                type="number"
-                min="0"
-                max="99"
-                class="field w-14 px-2 py-1 text-center"
-                :disabled="!teamsKnown"
-                aria-label="Score équipe A"
-                @input="setScore('a', ($event.target as HTMLInputElement).value)"
-              />
-            </template>
-          </div>
-          <span v-if="!multi" class="text-muted">–</span>
-          <span
-            v-else
-            class="shrink-0 rounded-full bg-surface-alt px-3 py-1 text-sm font-bold tabular-nums"
-            title="Manches gagnées"
-          >
-            {{ setsTally.won.a }} – {{ setsTally.won.b }}
-          </span>
-          <div class="flex min-w-0 flex-1 items-center gap-1.5">
-            <template v-if="!multi">
-              <input
-                :value="scoreB"
-                type="number"
-                min="0"
-                max="99"
-                class="field w-14 px-2 py-1 text-center"
-                :disabled="!teamsKnown"
-                aria-label="Score équipe B"
-                @input="setScore('b', ($event.target as HTMLInputElement).value)"
-              />
-              <button
-                v-if="teamsKnown"
-                type="button"
-                :class="shortcutClass"
-                :title="`Victoire ${slotLabel(tournament, game, 'b')}`"
-                @click="setWinner('b')"
-              >
-                {{ target }}
-              </button>
-            </template>
-            <span class="truncate text-sm" :class="game.team_b_id === null && 'italic text-muted'">
-              {{ slotLabel(tournament, game, 'b') }}
-            </span>
-          </div>
         </div>
-        <input
-          v-model="scheduledAt"
-          type="date"
-          class="field w-auto px-2 py-1 text-sm"
-          aria-label="Jour du match"
-        />
-        <button
-          v-if="teamsKnown && !multi"
-          type="button"
-          class="btn-ghost py-1 text-xs"
+      </div>
+    </header>
+
+    <form class="flex flex-col gap-4" @submit.prevent="handleSave">
+      <!-- Tableau de score : équipe A · score · équipe B. -->
+      <div class="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
+        <div
+          v-for="side in sides"
+          :key="side.slot"
+          class="flex min-w-0 flex-col items-center gap-1.5 text-center sm:gap-2.5"
           :class="
-            (game.goals.length > 0 || game.keeper_a_id !== null || game.keeper_b_id !== null) &&
-            'text-primary'
+            side.slot === 'a'
+              ? 'order-1 sm:flex-row-reverse sm:text-right'
+              : 'order-3 sm:flex-row sm:text-left'
           "
-          @click="showDetails = !showDetails"
         >
-          ⚽ Buteurs · 🧤
-        </button>
-        <button type="submit" class="btn-primary py-1" :disabled="!dirty || isSaving || !!problem">
-          Enregistrer
-        </button>
-        <button
-          v-if="isStarted(game)"
-          type="button"
-          class="btn-ghost py-1 text-xs"
-          :disabled="isSaving"
-          @click="clearScore"
-        >
-          Effacer
-        </button>
-      </div>
-
-      <!-- BO3/BO5 : un onglet par manche, chacune saisie comme un match. -->
-      <div
-        v-if="multi && teamsKnown"
-        class="flex flex-wrap gap-1.5"
-        role="tablist"
-        aria-label="Manches"
-      >
-        <button
-          v-for="(set, i) in sets"
-          :key="i"
-          type="button"
-          role="tab"
-          class="pill py-1 text-xs disabled:cursor-not-allowed disabled:opacity-40"
-          :class="activeManche === i && 'pill-active'"
-          :aria-selected="activeManche === i"
-          :disabled="!mancheOpen(i) && !isFilled(set)"
-          @click="activeManche = i"
-        >
-          Manche {{ i + 1 }}
-          <span v-if="mancheScore(set)" class="ml-1 tabular-nums opacity-70">
-            {{ mancheScore(set) }}
-          </span>
-        </button>
-      </div>
-
-      <!-- Panneau de saisie : la manche ouverte (BO3/BO5) ou le détail du
-           match (BO1, repliable). -->
-      <div
-        v-if="teamsKnown && (multi || showDetails)"
-        class="flex flex-col gap-3 rounded-2xl bg-surface-alt/60 p-3"
-      >
-        <div v-if="multi" class="flex items-center justify-center gap-2">
-          <span class="text-xs font-semibold text-muted">Manche {{ activeManche + 1 }}</span>
-          <button
-            type="button"
-            :class="shortcutClass"
-            :title="`Manche pour ${slotLabel(tournament, game, 'a')}`"
-            @click="setWinner('a')"
+          <TeamBadge :team="side.team" size="md" />
+          <div
+            class="flex max-w-full min-w-0 flex-col items-center"
+            :class="side.slot === 'a' ? 'sm:items-end' : 'sm:items-start'"
           >
-            {{ target }}
-          </button>
-          <input
-            :value="current?.a ?? ''"
-            type="number"
-            min="0"
-            max="99"
-            class="field w-14 px-2 py-1 text-center"
-            :aria-label="`Manche ${activeManche + 1}, score équipe A`"
-            @input="setScore('a', ($event.target as HTMLInputElement).value)"
-          />
-          <span class="text-muted">–</span>
-          <input
-            :value="current?.b ?? ''"
-            type="number"
-            min="0"
-            max="99"
-            class="field w-14 px-2 py-1 text-center"
-            :aria-label="`Manche ${activeManche + 1}, score équipe B`"
-            @input="setScore('b', ($event.target as HTMLInputElement).value)"
-          />
-          <button
-            type="button"
-            :class="shortcutClass"
-            :title="`Manche pour ${slotLabel(tournament, game, 'b')}`"
-            @click="setWinner('b')"
-          >
-            {{ target }}
-          </button>
+            <span
+              class="max-w-full truncate text-sm font-semibold sm:text-base"
+              :class="!side.team && 'font-normal text-muted italic'"
+            >
+              {{ slotLabel(tournament, game, side.slot) }}
+            </span>
+            <button
+              v-if="teamsKnown && !multi"
+              type="button"
+              class="cursor-pointer text-[11px] font-medium text-muted hover:text-primary"
+              @click="setWinner(side.slot)"
+            >
+              Victoire
+            </button>
+            <span v-else-if="multi && teamsKnown" class="text-[11px] text-muted">
+              {{ plural(setsTally.won[side.slot], 'manche') }}
+            </span>
+          </div>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
-          <div v-for="side in sides" :key="side.slot" class="flex flex-col gap-1.5">
-            <p class="text-xs font-semibold text-muted">
-              {{ side.team?.name }}
-              <span v-if="side.score !== ''">· {{ side.score }} buts</span>
-            </p>
-            <label
-              v-for="player in side.players"
-              :key="player.id"
-              class="flex items-center justify-between gap-2 text-sm"
+        <div class="order-2 flex items-center gap-2">
+          <template v-if="!teamsKnown">
+            <span class="px-2 text-xs text-muted">En attente</span>
+          </template>
+          <template v-else-if="multi">
+            <span class="display px-1 text-4xl tabular-nums">{{ setsTally.won.a }}</span>
+            <span class="display text-2xl text-muted">:</span>
+            <span class="display px-1 text-4xl tabular-nums">{{ setsTally.won.b }}</span>
+          </template>
+          <template v-else>
+            <input
+              :value="scoreA"
+              type="number"
+              min="0"
+              max="99"
+              inputmode="numeric"
+              :class="scoreInput"
+              :aria-label="`Score ${slotLabel(tournament, game, 'a')}`"
+              @input="setScore('a', ($event.target as HTMLInputElement).value)"
+            />
+            <span class="display text-2xl text-muted">:</span>
+            <input
+              :value="scoreB"
+              type="number"
+              min="0"
+              max="99"
+              inputmode="numeric"
+              :class="scoreInput"
+              :aria-label="`Score ${slotLabel(tournament, game, 'b')}`"
+              @input="setScore('b', ($event.target as HTMLInputElement).value)"
+            />
+          </template>
+        </div>
+      </div>
+
+      <!-- Match terminé : résumé d'une ligne. -->
+      <div
+        v-if="teamsKnown && !detailsOpen && isPlayed(game)"
+        class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted"
+      >
+        <span v-if="setsLabel(game)" class="tabular-nums">{{ setsLabel(game) }}</span>
+        <span v-if="summary.keepers">🧤 {{ summary.keepers }}</span>
+        <span v-if="summary.scorers">⚽ {{ summary.scorers }}</span>
+        <button
+          type="button"
+          class="cursor-pointer font-semibold text-text hover:text-primary"
+          @click="showDetails = true"
+        >
+          Modifier
+        </button>
+      </div>
+      <!-- BO1 sans score : accès aux gardiens/buteurs à la demande. -->
+      <button
+        v-else-if="teamsKnown && !detailsOpen"
+        type="button"
+        class="self-center cursor-pointer text-xs text-muted hover:text-text"
+        @click="showDetails = true"
+      >
+        🧤 Gardiens et ⚽ buteurs
+      </button>
+
+      <!-- Détail : manches (BO3/BO5), gardien et buteurs de chaque équipe. -->
+      <div v-if="detailsOpen" class="flex flex-col gap-3 rounded-2xl bg-surface-alt/50 p-3 sm:p-4">
+        <template v-if="multi">
+          <div class="flex flex-wrap justify-center gap-1.5" role="tablist" aria-label="Manches">
+            <button
+              v-for="(set, i) in sets"
+              :key="i"
+              type="button"
+              role="tab"
+              class="pill py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-30"
+              :class="activeManche === i && 'pill-active'"
+              :aria-selected="activeManche === i"
+              :disabled="!mancheOpen(i) && !isFilled(set)"
+              @click="activeManche = i"
             >
-              <span class="flex min-w-0 items-center gap-1.5">
+              Manche {{ i + 1 }}
+              <span v-if="mancheScore(set)" class="tabular-nums opacity-70">
+                {{ mancheScore(set) }}
+              </span>
+            </button>
+          </div>
+          <div class="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              class="cursor-pointer text-[11px] font-medium text-muted hover:text-primary"
+              @click="setWinner('a')"
+            >
+              Victoire {{ sides[0]?.team?.short_name }}
+            </button>
+            <input
+              :value="current?.a ?? ''"
+              type="number"
+              min="0"
+              max="99"
+              inputmode="numeric"
+              :class="smallScoreInput"
+              :aria-label="`Manche ${activeManche + 1}, score ${slotLabel(tournament, game, 'a')}`"
+              @input="setScore('a', ($event.target as HTMLInputElement).value)"
+            />
+            <span class="display text-lg text-muted">:</span>
+            <input
+              :value="current?.b ?? ''"
+              type="number"
+              min="0"
+              max="99"
+              inputmode="numeric"
+              :class="smallScoreInput"
+              :aria-label="`Manche ${activeManche + 1}, score ${slotLabel(tournament, game, 'b')}`"
+              @input="setScore('b', ($event.target as HTMLInputElement).value)"
+            />
+            <button
+              type="button"
+              class="cursor-pointer text-[11px] font-medium text-muted hover:text-primary"
+              @click="setWinner('b')"
+            >
+              Victoire {{ sides[1]?.team?.short_name }}
+            </button>
+          </div>
+        </template>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div v-for="side in sides" :key="side.slot" class="flex flex-col gap-2.5">
+            <p class="flex items-center gap-2 text-xs font-semibold">
+              <TeamBadge :team="side.team" size="xs" />
+              {{ side.team?.name }}
+            </p>
+            <!-- Gardien : un des deux joueurs (obligatoire). -->
+            <div class="flex flex-col gap-1">
+              <span class="text-[11px] text-muted">🧤 Gardien</span>
+              <div class="grid grid-cols-2 gap-1 rounded-full bg-surface p-0.5">
                 <button
+                  v-for="player in side.players"
+                  :key="player.id"
                   type="button"
-                  class="shrink-0 cursor-pointer rounded-full px-1.5 py-0.5 text-xs"
+                  class="cursor-pointer truncate rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
                   :class="
                     keeperOf(side.slot) === player.id
                       ? 'bg-primary text-primary-text'
-                      : 'bg-surface opacity-40 hover:opacity-100'
+                      : 'text-muted hover:text-text'
                   "
                   :aria-pressed="keeperOf(side.slot) === player.id"
-                  :title="`${player.name} gardien`"
-                  @click.prevent="toggleKeeper(side.slot, player.id)"
+                  @click="toggleKeeper(side.slot, player.id)"
                 >
-                  🧤
+                  {{ player.name }}
                 </button>
-                <span class="truncate">{{ player.name }}</span>
+              </div>
+            </div>
+            <!-- Buteurs (facultatif). -->
+            <div class="flex flex-col gap-1">
+              <span class="text-[11px] text-muted">
+                ⚽ Buts <span v-if="side.score !== ''">· {{ side.score }} au total</span>
               </span>
-              <input
-                :value="goalValue(mancheNumber, player.id) ?? ''"
-                type="number"
-                min="0"
-                max="99"
-                class="field w-16 px-2 py-1 text-center"
-                :aria-label="
-                  multi
-                    ? `Buts de ${player.name}, manche ${activeManche + 1}`
-                    : `Buts de ${player.name}`
-                "
-                @input="setGoal(player.id, ($event.target as HTMLInputElement).value)"
-              />
-            </label>
+              <label
+                v-for="player in side.players"
+                :key="player.id"
+                class="flex items-center justify-between gap-2 text-sm"
+              >
+                <span class="truncate">{{ player.name }}</span>
+                <input
+                  :value="goalValue(mancheNumber, player.id) ?? ''"
+                  type="number"
+                  min="0"
+                  max="99"
+                  inputmode="numeric"
+                  placeholder="–"
+                  class="field h-9 w-14 px-0 text-center"
+                  :aria-label="
+                    multi
+                      ? `Buts de ${player.name}, manche ${activeManche + 1}`
+                      : `Buts de ${player.name}`
+                  "
+                  @input="setGoal(player.id, ($event.target as HTMLInputElement).value)"
+                />
+              </label>
+            </div>
           </div>
         </div>
-        <p class="text-xs text-muted">
-          🧤 obligatoire : le gardien de chaque équipe<template v-if="multi">
-            dans cette manche (il peut changer d'une manche à l'autre)</template
-          >, son coéquipier est l'attaquant. Buteurs facultatifs : les buts d'un joueur complètent
-          automatiquement ceux de son coéquipier.
+        <p class="text-[11px] text-muted">
+          Le coéquipier du gardien joue en attaque. Les buts d'un joueur complètent automatiquement
+          ceux de son coéquipier.
           <template v-if="multi">
-            Chaque manche peut être enregistrée dès qu'elle est jouée.</template
+            Le gardien peut changer à chaque manche ; enregistre chaque manche dès qu'elle est
+            jouée.</template
           >
         </p>
       </div>
+
+      <!-- Actions : message à gauche, boutons à droite. -->
+      <footer v-if="showActions" class="flex flex-wrap items-center justify-end gap-2">
+        <p v-if="error" class="mr-auto text-xs text-danger">{{ error }}</p>
+        <p v-else-if="problem && dirty" class="mr-auto text-xs text-danger">{{ problem }}</p>
+        <p v-else-if="dirty" class="mr-auto text-xs text-muted">Modifications non enregistrées</p>
+        <button
+          v-if="isStarted(game)"
+          type="button"
+          class="btn-ghost text-xs"
+          :disabled="isSaving"
+          @click="clearScore"
+        >
+          Effacer le score
+        </button>
+        <button type="submit" class="btn-primary" :disabled="!dirty || isSaving || !!problem">
+          {{ isSaving ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </footer>
     </form>
-    <p v-if="problem && (showDetails || multi || dirty)" class="text-xs text-danger">
-      {{ problem }}
-    </p>
-    <p v-if="error" class="text-xs text-danger">{{ error }}</p>
-  </div>
+  </article>
 </template>

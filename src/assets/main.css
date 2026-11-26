@@ -40,6 +40,18 @@
   }
 }
 
+/* Champs numériques (scores, buts) : sans les flèches natives, qui
+   débordent sur les petits champs centrés. */
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-text);
