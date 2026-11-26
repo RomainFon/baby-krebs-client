@@ -25,32 +25,51 @@ watch(
   { immediate: true },
 )
 
-const tiles = computed(() => {
-  const s = player.value?.stats
+const stats = computed(() => player.value?.stats ?? null)
+
+// Bloc "Buts" : quatre chiffres côte à côte.
+const goalFigures = computed(() => {
+  const s = stats.value
   if (!s) return []
   return [
-    { label: 'Matchs', value: s.played },
-    { label: 'Victoires', value: s.wins, cls: 'text-winner' },
-    { label: 'Défaites', value: s.losses, cls: 'text-loser' },
-    { label: '% victoires', value: s.played ? percent(s.win_rate) : '–', variant: 'lime' },
-    { label: 'Buts marqués', value: s.goals_scored },
-    { label: 'Buts équipe', value: s.goals_for },
-    { label: 'Buts contre', value: s.goals_against },
-    { label: 'Différence', value: signed(s.goal_diff) },
-    { label: 'Titres', value: s.titles ? `🏆 ${s.titles}` : '0', variant: 'paper' },
-    { label: 'Matchs attaquant', value: s.games_as_attacker },
+    { label: 'Marqués', value: s.goals_scored, hint: 'par le joueur' },
+    { label: 'Équipe', value: s.goals_for, hint: 'avec son équipe' },
+    { label: 'Encaissés', value: s.goals_against, hint: 'par son équipe' },
+    { label: 'Différence', value: signed(s.goal_diff), hint: 'équipe' },
+  ]
+})
+
+// Bloc "Postes" : attaque et défense (gardien), comptés manche par manche
+// en BO3/BO5. Seulement les matchs où le gardien a été saisi.
+const positions = computed(() => {
+  const s = stats.value
+  if (!s) return []
+  const avg = (n: number, d: number) => (d ? (n / d).toFixed(1) : '–')
+  return [
     {
-      label: '% V attaque',
-      value: s.games_as_attacker ? percent(s.attacker_win_rate) : '–',
+      key: 'attack',
+      emoji: '⚽',
+      title: 'En attaque',
+      played: s.games_as_attacker,
+      wins: s.wins_as_attacker,
+      rate: s.attacker_win_rate,
+      figures: [
+        { label: 'Buts', value: s.goals_scored_as_attacker },
+        { label: 'Buts / match', value: avg(s.goals_scored_as_attacker, s.games_as_attacker) },
+      ],
     },
-    { label: 'Buts en attaque', value: s.goals_scored_as_attacker },
-    { label: 'Matchs gardien', value: s.games_as_keeper },
-    { label: '% V défense', value: s.games_as_keeper ? percent(s.keeper_win_rate) : '–' },
-    { label: 'Buts en défense', value: s.goals_scored_as_keeper },
-    { label: 'Encaissés gardien', value: s.goals_conceded_as_keeper },
     {
-      label: 'Moy. encaissée',
-      value: s.games_as_keeper ? (s.goals_conceded_as_keeper / s.games_as_keeper).toFixed(1) : '–',
+      key: 'keeper',
+      emoji: '🧤',
+      title: 'Au but',
+      played: s.games_as_keeper,
+      wins: s.wins_as_keeper,
+      rate: s.keeper_win_rate,
+      figures: [
+        { label: 'Encaissés', value: s.goals_conceded_as_keeper },
+        { label: 'Encaissés / match', value: avg(s.goals_conceded_as_keeper, s.games_as_keeper) },
+        { label: 'Buts marqués', value: s.goals_scored_as_keeper },
+      ],
     },
   ]
 })
@@ -88,27 +107,115 @@ const verdict = computed(() => {
         <p class="text-muted">{{ verdict }}</p>
       </header>
 
-      <dl class="grid grid-cols-3 gap-3">
-        <div
-          v-for="t in tiles"
-          :key="t.label"
-          class="rounded-3xl px-5 py-4"
-          :class="
-            'variant' in t
-              ? t.variant === 'lime'
-                ? 'bg-primary text-primary-text'
-                : 'bg-paper text-ink'
-              : 'bg-surface'
-          "
-        >
-          <dt class="text-xs" :class="'variant' in t ? 'opacity-60' : 'text-muted'">
-            {{ t.label }}
-          </dt>
-          <dd class="display text-3xl tabular-nums" :class="t.cls">
-            {{ t.value }}
-          </dd>
-        </div>
-      </dl>
+      <template v-if="stats">
+        <!-- Bilan : % de victoires et barre V/D, titres, tournois. -->
+        <section class="grid gap-3 sm:grid-cols-[2fr_1fr]">
+          <div class="flex flex-col gap-4 rounded-3xl bg-primary p-5 text-primary-text">
+            <div class="flex items-end justify-between gap-4">
+              <div>
+                <p class="text-xs opacity-60">% victoires</p>
+                <p class="display text-6xl tabular-nums">
+                  {{ stats.played ? percent(stats.win_rate) : '–' }}
+                </p>
+              </div>
+              <p class="text-right text-sm font-medium opacity-70">
+                {{ plural(stats.played, 'match', 'matchs') }}
+              </p>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <div class="flex h-2.5 overflow-hidden rounded-full bg-ink/15">
+                <span
+                  class="h-full rounded-full bg-ink"
+                  :style="{ width: `${stats.played ? (stats.wins / stats.played) * 100 : 0}%` }"
+                />
+              </div>
+              <p class="flex justify-between text-xs font-semibold">
+                <span>{{ plural(stats.wins, 'victoire') }}</span>
+                <span class="opacity-60">{{ plural(stats.losses, 'défaite') }}</span>
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-1">
+            <div class="rounded-3xl bg-paper px-5 py-4 text-ink">
+              <p class="text-xs opacity-60">Titres</p>
+              <p class="display text-3xl tabular-nums">
+                {{ stats.titles ? `🏆 ${stats.titles}` : '0' }}
+              </p>
+            </div>
+            <div class="rounded-3xl bg-surface px-5 py-4">
+              <p class="text-xs text-muted">Tournois</p>
+              <p class="display text-3xl tabular-nums">{{ stats.tournaments }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Buts : perso, équipe, encaissés, différence (+ fannys). -->
+        <section class="flex flex-col gap-3 rounded-3xl bg-surface p-5">
+          <h2 class="section-title">Buts</h2>
+          <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+            <div v-for="f in goalFigures" :key="f.label">
+              <dt class="text-xs text-muted">{{ f.label }}</dt>
+              <dd class="display text-3xl tabular-nums">{{ f.value }}</dd>
+              <p class="text-[11px] text-muted">{{ f.hint }}</p>
+            </div>
+          </dl>
+          <p
+            v-if="stats.fannys_given || stats.fannys_taken"
+            class="border-t border-line pt-3 text-xs text-muted"
+          >
+            Fannys : {{ plural(stats.fannys_given, 'donnée') }} ·
+            {{ plural(stats.fannys_taken, 'prise') }}
+          </p>
+        </section>
+
+        <!-- Postes : attaque et défense côte à côte. -->
+        <section class="flex flex-col gap-3">
+          <h2 class="section-title">Postes</h2>
+          <div class="grid gap-3 md:grid-cols-2">
+            <article
+              v-for="pos in positions"
+              :key="pos.key"
+              class="flex flex-col gap-4 rounded-3xl bg-surface p-5"
+            >
+              <header class="flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2">
+                  <span
+                    class="flex h-9 w-9 items-center justify-center rounded-full bg-surface-alt text-lg"
+                    >{{ pos.emoji }}</span
+                  >
+                  <span class="font-semibold">{{ pos.title }}</span>
+                </span>
+                <span class="text-xs text-muted">{{ plural(pos.played, 'match', 'matchs') }}</span>
+              </header>
+              <p v-if="pos.played === 0" class="text-sm text-muted">Jamais joué à ce poste.</p>
+              <template v-else>
+                <div class="flex flex-col gap-1.5">
+                  <p class="flex items-baseline justify-between gap-2">
+                    <span class="display text-4xl tabular-nums">{{ percent(pos.rate) }}</span>
+                    <span class="text-xs text-muted">{{ pos.wins }} V / {{ pos.played }}</span>
+                  </p>
+                  <div class="h-1.5 overflow-hidden rounded-full bg-surface-alt">
+                    <span
+                      class="block h-full rounded-full bg-primary"
+                      :style="{ width: `${pos.rate * 100}%` }"
+                    />
+                  </div>
+                </div>
+                <dl class="grid grid-cols-3 gap-3 border-t border-line pt-3">
+                  <div v-for="f in pos.figures" :key="f.label">
+                    <dt class="text-[11px] text-muted">{{ f.label }}</dt>
+                    <dd class="display text-2xl tabular-nums">{{ f.value }}</dd>
+                  </div>
+                </dl>
+              </template>
+            </article>
+          </div>
+          <p class="text-xs text-muted">
+            Postes déduits du gardien saisi (son coéquipier est l'attaquant), comptés manche par
+            manche en BO3/BO5.
+          </p>
+        </section>
+      </template>
 
       <div class="grid gap-6 md:grid-cols-2">
         <section class="flex flex-col gap-2">
