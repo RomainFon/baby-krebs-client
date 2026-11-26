@@ -14,8 +14,10 @@ if [ ! -f .env.prod ]; then
   exit 1
 fi
 
-echo "==> Build + démarrage du conteneur"
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+echo "==> Build (images de base à jour) + démarrage du conteneur"
+# --pull : re-télécharge les images de base pour récupérer les patchs de sécurité
+docker compose -f docker-compose.prod.yml --env-file .env.prod build --pull
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 echo "==> État du conteneur"
 docker compose -f docker-compose.prod.yml --env-file .env.prod ps
