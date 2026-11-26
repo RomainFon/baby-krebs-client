@@ -8,6 +8,7 @@ import {
   slotLabel,
   STAGE_ACCENT,
   teamById,
+  liveSets,
   teamTint,
   winnerSlot,
 } from '@/lib/tournament'
@@ -21,6 +22,8 @@ const props = defineProps<{
 defineEmits<{ open: [game: Game] }>()
 
 const winner = computed(() => winnerSlot(props.game))
+// BO3/BO5 en cours : manches déjà gagnées, sans vainqueur.
+const live = computed(() => liveSets(props.game))
 const involved = computed(
   () =>
     props.highlightTeamId != null &&
@@ -44,7 +47,7 @@ const rows = computed(() =>
     teamId: slot === 'a' ? props.game.team_a_id : props.game.team_b_id,
     team: teamById(props.tournament, slot === 'a' ? props.game.team_a_id : props.game.team_b_id),
     label: slotLabel(props.tournament, props.game, slot),
-    score: slot === 'a' ? props.game.score_a : props.game.score_b,
+    score: live.value ? live.value[slot] : slot === 'a' ? props.game.score_a : props.game.score_b,
   })),
 )
 </script>
@@ -57,7 +60,14 @@ const rows = computed(() =>
     @click="$emit('open', game)"
   >
     <div class="mb-1.5 flex items-center justify-between gap-2 px-1 text-[11px] text-muted">
-      <span class="font-semibold">M{{ game.number }}</span>
+      <span class="font-semibold"
+        >M{{ game.number }}
+        <span
+          v-if="game.best_of > 1"
+          class="ml-1 rounded-full bg-surface-alt px-1.5 py-px text-[10px] font-bold text-text"
+          >BO{{ game.best_of }}</span
+        ></span
+      >
       <span>{{
         game.played_at || game.scheduled_at ? formatDate(game.scheduled_at ?? game.played_at) : ''
       }}</span>
@@ -94,7 +104,11 @@ const rows = computed(() =>
           v-if="row.score !== null"
           class="flex h-6 min-w-7 items-center justify-center rounded-full px-1.5 text-xs font-bold tabular-nums"
           :class="
-            winner === row.slot ? 'bg-primary text-primary-text' : 'bg-surface-alt text-muted'
+            winner === row.slot
+              ? 'bg-primary text-primary-text'
+              : live
+                ? 'bg-surface-alt text-primary ring-1 ring-primary/50'
+                : 'bg-surface-alt text-muted'
           "
         >
           {{ row.score }}

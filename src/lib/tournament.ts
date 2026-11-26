@@ -40,9 +40,48 @@ export function isPlayed(game: Game): boolean {
   return game.score_a !== null && game.score_b !== null
 }
 
+/**
+ * Match commencé : joué, ou BO3/BO5 dont des manches sont saisies (elles
+ * s'enregistrent au fur et à mesure ; pas de vainqueur avant la majorité).
+ */
+export function isStarted(game: Game): boolean {
+  return isPlayed(game) || (game.sets?.length ?? 0) > 0
+}
+
+/** BO3/BO5 en cours : manches gagnées par chaque côté (null sinon). */
+export function liveSets(game: Game): { a: number; b: number } | null {
+  if (isPlayed(game) || !game.sets?.length) return null
+  return {
+    a: game.sets.filter((s) => s.a > s.b).length,
+    b: game.sets.filter((s) => s.b > s.a).length,
+  }
+}
+
 export function winnerSlot(game: Game): Slot | null {
   if (!isPlayed(game)) return null
   return game.score_a! > game.score_b! ? 'a' : 'b'
+}
+
+/**
+ * Points de chaque manche jouée : en BO1 une seule manche (le score), en
+ * BO3/BO5 le détail `sets` (score_a/score_b = manches gagnées).
+ */
+export function gameManches(game: Game): { a: number; b: number }[] {
+  if (!isPlayed(game)) return []
+  if (game.best_of > 1 && game.sets) return game.sets
+  return [{ a: game.score_a!, b: game.score_b! }]
+}
+
+/** Points marqués par un côté sur tout le match (toutes manches). */
+export function gamePoints(game: Game, slot: Slot): number {
+  return gameManches(game).reduce((sum, m) => sum + m[slot], 0)
+}
+
+/** Détail des manches "10-7 · 8-10 · 10-6" (vide en BO1). */
+export function setsLabel(game: Game, from: Slot = 'a'): string {
+  if (game.best_of === 1 || !game.sets) return ''
+  const other = from === 'a' ? 'b' : 'a'
+  return game.sets.map((s) => `${s[from]}-${s[other]}`).join(' · ')
 }
 
 function ordinal(rank: number): string {
@@ -135,13 +174,11 @@ export function teamStats(tournament: TournamentDetail, teamId: number): TeamSta
   }
   for (const game of teamGames(tournament, teamId)) {
     if (!isPlayed(game)) continue
-    const isA = game.team_a_id === teamId
-    const scored = isA ? game.score_a! : game.score_b!
-    const conceded = isA ? game.score_b! : game.score_a!
+    const own: Slot = game.team_a_id === teamId ? 'a' : 'b'
     stats.played++
-    stats.goals_for += scored
-    stats.goals_against += conceded
-    if (scored > conceded) stats.wins++
+    stats.goals_for += gamePoints(game, own)
+    stats.goals_against += gamePoints(game, own === 'a' ? 'b' : 'a')
+    if (winnerSlot(game) === own) stats.wins++
     else stats.losses++
   }
   stats.goal_diff = stats.goals_for - stats.goals_against

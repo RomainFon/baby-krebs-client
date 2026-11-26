@@ -1,6 +1,8 @@
 import { http } from './client'
 import type {
+  BestOf,
   GameGoal,
+  GameSet,
   GlobalStats,
   PlayerDetail,
   PlayerRef,
@@ -88,8 +90,12 @@ export function deleteTeam(teamId: number): Detail {
 
 export interface GamePayload {
   scheduled_at?: string | null
+  // Modifiable tant que le match n'est pas joué.
+  best_of?: BestOf
   score_a?: number | null
   score_b?: number | null
+  // BO3/BO5 : points de chaque manche, le résultat (manches gagnées) en découle.
+  sets?: GameSet[] | null
   // Buteurs : liste complète, remplace l'existant.
   goals?: GameGoal[]
   // Gardiens : seules les clés envoyées sont modifiées.

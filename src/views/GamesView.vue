@@ -5,7 +5,9 @@ import type { Game, TournamentDetail } from '@/types'
 import {
   gameTitle,
   isPlayed,
+  liveSets,
   parseDay,
+  setsLabel,
   slotLabel,
   STAGE_ACCENT,
   winnerSlot,
@@ -99,6 +101,8 @@ const days = computed(() => {
         <div class="min-w-0 flex-1">
           <p class="text-[11px] text-muted">
             M{{ game.number }} · {{ gameTitle(tournament, game) }}
+            <template v-if="game.best_of > 1"> · BO{{ game.best_of }}</template>
+            <template v-if="setsLabel(game)"> ({{ setsLabel(game) }})</template>
           </p>
           <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             <span
@@ -116,6 +120,11 @@ const days = computed(() => {
             </span>
             <span class="font-display tabular-nums">
               <template v-if="isPlayed(game)">{{ game.score_a }} – {{ game.score_b }}</template>
+              <template v-else-if="liveSets(game)"
+                ><span class="text-primary"
+                  >{{ liveSets(game)!.a }} – {{ liveSets(game)!.b }}</span
+                ></template
+              >
               <span v-else class="text-sm font-normal text-muted">vs</span>
             </span>
             <span

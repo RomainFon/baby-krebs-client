@@ -179,9 +179,15 @@ const verdict = computed(() => {
             <span
               v-if="game.keeper"
               class="rounded-full bg-surface-alt px-2 py-0.5 text-xs font-semibold"
-              title="Gardien dans ce match"
+              :title="
+                game.keeper_manches !== null
+                  ? `Gardien sur ${game.keeper_manches} manche(s) sur ${game.sets?.length ?? 0}`
+                  : 'Gardien dans ce match'
+              "
             >
-              🧤
+              🧤<template v-if="game.keeper_manches !== null">
+                {{ game.keeper_manches }}/{{ game.sets?.length ?? 0 }}</template
+              >
             </span>
             <span
               class="rounded px-1.5 py-0.5 text-xs font-bold"
@@ -193,8 +199,14 @@ const verdict = computed(() => {
             >
               {{ game.score_for > game.score_against ? 'V' : 'D' }}
             </span>
-            <span class="display text-2xl tabular-nums">
-              {{ game.score_for }}–{{ game.score_against }}
+            <span class="flex flex-col items-end">
+              <span class="display text-2xl tabular-nums">
+                {{ game.score_for }}–{{ game.score_against }}
+              </span>
+              <!-- BO3/BO5 : score = manches, détail des points en dessous. -->
+              <span v-if="game.sets" class="text-[10px] text-muted tabular-nums">
+                {{ game.sets.map(([f, a]) => `${f}-${a}`).join(' · ') }}
+              </span>
             </span>
           </div>
         </RouterLink>

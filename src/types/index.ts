@@ -74,8 +74,13 @@ export interface Game {
   position: number
   team_a_id: number | null
   team_b_id: number | null
+  // Format du match : BO1 (défaut), BO3 ou BO5.
+  best_of: BestOf
+  // BO1 : points. BO3/BO5 : manches gagnées (points dans `sets`).
   score_a: number | null
   score_b: number | null
+  // BO3/BO5 : points de chaque manche jouée (null en BO1).
+  sets: GameSet[] | null
   // Gardien de chaque équipe (facultatif, saisi avec le score).
   keeper_a_id: number | null
   keeper_b_id: number | null
@@ -92,8 +97,20 @@ export interface Game {
   goals: GameGoal[]
 }
 
+export type BestOf = 1 | 3 | 5
+
+export interface GameSet {
+  a: number
+  b: number
+  // Gardien de chaque équipe dans la manche (peut changer d'une manche à l'autre).
+  keeper_a_id: number | null
+  keeper_b_id: number | null
+}
+
 export interface GameGoal {
   player_id: number
+  // Manche (1 en BO1) : les buteurs se saisissent manche par manche.
+  manche: number
   goals: number
 }
 
@@ -159,9 +176,14 @@ export interface PlayerDetail extends PlayerWithStats {
     opponent_name: string
     score_for: number
     score_against: number
+    best_of: BestOf
+    // BO3/BO5 : manches vues du joueur, [pour, contre].
+    sets: [number, number][] | null
     goals_scored: number | null
     // Gardien de son équipe dans ce match (null si non saisi).
     keeper: boolean | null
+    // BO3/BO5 : nombre de manches jouées comme gardien (null en BO1).
+    keeper_manches: number | null
     played_at: string | null
   }[]
 }

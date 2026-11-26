@@ -8,7 +8,9 @@ import {
   formatDate,
   gameTitle,
   isPlayed,
+  setsLabel,
   slotLabel,
+  winnerSlot,
   STAGE_ACCENT,
   teamById,
   teamGames,
@@ -63,10 +65,11 @@ function opponent(game: Game): string {
 }
 
 function result(game: Game) {
-  const isA = game.team_a_id === props.teamId
-  const own = isA ? game.score_a! : game.score_b!
-  const other = isA ? game.score_b! : game.score_a!
-  return { own, other, won: own > other }
+  const slot = game.team_a_id === props.teamId ? 'a' : 'b'
+  const own = slot === 'a' ? game.score_a! : game.score_b!
+  const other = slot === 'a' ? game.score_b! : game.score_a!
+  // BO3/BO5 : own/other = manches gagnées, sets = points de chaque manche.
+  return { own, other, won: winnerSlot(game) === slot, sets: setsLabel(game, slot) }
 }
 </script>
 
@@ -158,8 +161,13 @@ function result(game: Game) {
           >
             {{ result(game).won ? 'V' : 'D' }}
           </span>
-          <span class="display text-2xl tabular-nums">
-            {{ result(game).own }}–{{ result(game).other }}
+          <span class="flex flex-col items-end">
+            <span class="display text-2xl tabular-nums">
+              {{ result(game).own }}–{{ result(game).other }}
+            </span>
+            <span v-if="result(game).sets" class="text-[10px] text-muted tabular-nums">
+              {{ result(game).sets }}
+            </span>
           </span>
         </div>
       </button>
