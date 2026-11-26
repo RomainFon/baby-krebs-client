@@ -82,10 +82,13 @@ const rows = computed(() =>
         class="absolute inset-y-3 left-0 w-1 rounded-r-full"
         :style="{ background: STAGE_ACCENT[game.stage] }"
       />
+      <!-- Hauteur fixe (celle de la pastille de score) : une carte jouée et une
+           carte vide font la même taille, sinon les colonnes de l'arbre se
+           décalent et les pointillés ne tombent plus en face. -->
       <div
         v-for="row in rows"
         :key="row.slot"
-        class="flex items-center justify-between gap-2 py-2 pr-2 pl-4 text-sm"
+        class="flex min-h-10 items-center justify-between gap-2 py-2 pr-2 pl-4 text-sm"
         :class="[
           winner === row.slot ? 'font-semibold text-text' : winner ? 'text-muted' : '',
           row.teamId === null ? 'text-muted italic' : '',
